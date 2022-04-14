@@ -4,7 +4,6 @@ import Head from "next/head";
 import NextLink from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import Footer from "./Footer";
 import MobileMenu from "./MobileMenu";
 
 function NavItem({ href, text }) {
@@ -123,7 +122,7 @@ export default function Container(props) {
         className="flex flex-col justify-center px-8 bg-gray-50 dark:bg-gray-900"
       >
         {children}
-        <Footer />
+        {/* <Footer /> */}
       </main>
     </div>
   );
