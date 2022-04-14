@@ -10,16 +10,37 @@ export default async function handler(req, res) {
   const notion = new Client({
     auth: process.env.NOTION_TOKEN,
   });
-  const pageInfo = await notion.pages.retrieve({
-    page_id: "6b2b4269098d407a8cafab3f46842396",
-  });
 
-  if (!pageInfo) {
+  const databaseId = process.env.NOTION_DATABASE_ID;
+
+  try {
+    async function addItem(text) {
+      try {
+        const response = await notion.pages.create({
+          parent: { database_id: databaseId },
+          properties: {
+            title: {
+              title: [
+                {
+                  text: {
+                    content: text,
+                  },
+                },
+              ],
+            },
+          },
+        });
+        console.log("Success! Entry added.");
+        return res.status(201).json({ error: "", data: response });
+      } catch (error) {
+        console.error(error.body);
+        return res.status(500).json({ error: error.body });
+      }
+    }
+
+    await addItem(email);
+  } catch (error) {
     console.log("error!!!");
-
-    return res.status(500).json({ error: data.error.email[0] });
   }
-
-  return res.status(201).json({ error: "", data: pageInfo });
 }
 
