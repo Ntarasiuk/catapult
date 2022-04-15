@@ -1,6 +1,6 @@
 const { Client } = require("@notionhq/client");
 export default async function handler(req, res) {
-  const { email } = req.body;
+  const { email, type = "Recruiter", company, company_url } = req.body;
 
   if (!email) {
     return res.status(400).json({ error: "Email is required" });
@@ -14,33 +14,53 @@ export default async function handler(req, res) {
   const databaseId = process.env.NOTION_DATABASE_ID;
 
   try {
-    async function addItem(text) {
-      try {
-        const response = await notion.pages.create({
-          parent: { database_id: databaseId },
-          properties: {
-            title: {
-              title: [
-                {
-                  text: {
-                    content: text,
-                  },
-                },
-              ],
+    const database = await notion.databases.retrieve({
+      database_id: databaseId,
+    });
+    console.log(database);
+    const response = await notion.pages.create({
+      parent: { database_id: databaseId },
+      properties: {
+        title: {
+          title: [
+            {
+              text: {
+                content: email,
+              },
             },
-          },
-        });
-        console.log("Success! Entry added.");
-        return res.status(201).json({ error: "", data: response });
-      } catch (error) {
-        console.error(error.body);
-        return res.status(500).json({ error: error.body });
-      }
-    }
+          ],
+        },
 
-    await addItem(email);
+        Type: {
+          type: "select",
+          select: {
+            name: type,
+          },
+        },
+        Company: {
+          type: "rich_text",
+          rich_text: [
+            {
+              text: {
+                content: company,
+                ...(company_url
+                  ? {
+                      link: {
+                        url: "https://google.com",
+                      },
+                    }
+                  : null),
+              },
+            },
+          ],
+        },
+      },
+    });
+    console.log("Success! Entry added.");
+    return res.status(201).json({ error: "", data: response });
   } catch (error) {
-    console.log("error!!!");
+    console.error(error.body);
+    return res.status(500).json({ error: error.body });
   }
 }
 
