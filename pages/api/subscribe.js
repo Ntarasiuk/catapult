@@ -14,10 +14,6 @@ export default async function handler(req, res) {
   const databaseId = process.env.NOTION_DATABASE_ID;
 
   try {
-    const database = await notion.databases.retrieve({
-      database_id: databaseId,
-    });
-    console.log(database);
     const response = await notion.pages.create({
       parent: { database_id: databaseId },
       properties: {
