@@ -9,8 +9,10 @@ export default function Subscribe() {
   const urlEl = useRef(null);
   const [form, setForm] = useState({ state: "Initial" });
   const [type, setType] = useState("Recruiter");
+  const [loading, setLoading] = useState(false)
 
   const subscribe = async (e) => {
+    setLoading(true)
     e.preventDefault();
     setForm({ state: "Loading" });
 
@@ -39,6 +41,7 @@ export default function Subscribe() {
     emailEl.current.value = "";
     companyEl.current.value = "";
     urlEl.current.value = "";
+    setLoading(false)
     setForm({
       state: "Success",
       message: `Hooray! You're now on the list.`,
@@ -74,7 +77,6 @@ export default function Subscribe() {
           ref={urlEl}
           aria-label="Website"
           placeholder="Website"
-          type="url"
           autoComplete="website"
           className="px-4 py-2 mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full border-gray-300 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 pr-32"
         />
@@ -107,6 +109,8 @@ export default function Subscribe() {
         <button
           className="flex items-center justify-center my-4 px-4 font-medium h-10 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded w-28"
           type="submit"
+          disabled={loading}
+
         >
           {"state" === "Loading" ? <LoadingSpinner /> : "Contact"}
         </button>

@@ -22,7 +22,7 @@ export default function Footer() {
           </Link>
         </div>
         <div className="flex flex-col space-y-4">
-          <Link href="/about">
+          <Link href="#about">
             <a className="text-gray-500 hover:text-gray-600 transition">
               About
             </a>
@@ -32,4 +32,3 @@ export default function Footer() {
     </footer>
   );
 }
-

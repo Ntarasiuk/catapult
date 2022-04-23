@@ -79,7 +79,7 @@ export default function Container(props) {
           <div className="ml-[-0.60rem]">
             <MobileMenu />
             <NavItem href="/" text="Home" />
-            <NavItem href="/about" text="About" />
+            <NavItem href="#about" text="About" />
           </div>
           <button
             aria-label="Toggle Dark Mode"
@@ -127,4 +127,3 @@ export default function Container(props) {
     </div>
   );
 }
-
