@@ -16,48 +16,37 @@ export default function Home() {
             <h2 className="text-gray-700 dark:text-gray-200 mb-4">
               Find the developer you&apos;re looking for
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-16">
-              Helping companies find the right developers, and helping
-              developers present their best
-            </p>
           </div>
         </div>
-        <span className="h-16" />
+        <span className="h-8" />
 
         <div className="flex flex-col justify-center items-start max-w-2xl mx-auto mb-16 w-full">
-          <h1
-            id="about"
-            className="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white"
-          >
-            About Us
-          </h1>
-          <div className="mb-8 prose dark:prose-dark leading-6">
+          <div id="about" className="mb-8 prose dark:prose-dark leading-6">
             <h2>Who are we?</h2>
             <p>
-              Catapult ☄ is focused on the technical (read: software engineers)
-              job market, of which there are 4.1 Million unfilled jobs.
-              Specifically, <b>Front-end Engineers</b> and{" "}
-              <b>Fullstack engineers</b> for now. There are lots of extremely
-              talented software developers out there waiting to be hired, but
-              they can&apos;t seem to be noticed.
+              Catapult ☄ is focused on the technical job market (specifically,{" "}
+              <b>Front-end Engineers</b> and <b>Fullstack engineers</b>) of
+              which there are a staggering 4.1 Million unfilled jobs. Despite
+              the abundance of highly skilled software developers ready to be
+              hired, they remain unnoticed and unable to find employment.
             </p>
             <h2>What&apos;s the need?</h2>
             <p>
-              Generally, recruiters have only a couple tools to work with before
-              meeting a candidate: resume, job description, and some keywords to
-              blindly search. It becomes really hard to figure out if a
-              candidate can do what they <em>say they do</em> because there is a
-              technical barrier. Filtering by &quot;hot buzzwords&quot;
-              won&apos;t get you very far. Now they&apos;re left with 100s of
-              candidates who are most likely unqualified and being thrown into
-              long interviews. This will frusterate the recruiter, the
-              developer, and more importantly the hiring client.
+              Generally, recruiters only have a few resources available to them
+              before meeting a candidate such as a resume, job description, and
+              some keyword search terms. As a result, it can be difficult to
+              ascertain if a candidate possesses the skills they{" "}
+              <em>say they have</em>, as simply relying on &quot;hot
+              buzzwords&quot; is not enough. This can leave recruiters with
+              hundreds of candidates who are likely unqualified, leading to
+              lengthy interviews that can be incredibly frustrating for the
+              recruiter, developer and, most importantly, the hiring client.
             </p>
             <h2>What&apos;s the solution?</h2>
             <p>
-              Catapult will screen developers in both <b>hard skills</b> and{" "}
-              <b>soft skills</b> to verify their skills, provide honest feedback
-              to the developer, and a clear report to use and present to
+              Catapult will rigorously evaluate developers in both technical and
+              interpersonal competencies, provide candid, constructive feedback,
+              and produce a comprehensive report to be used and shared with
               clients.
             </p>
           </div>
