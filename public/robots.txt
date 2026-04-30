@@ -1,0 +1,105 @@
+# Catapult — devcatapult.com
+# https://www.rfc-editor.org/rfc/rfc9309
+# Content-Signal: https://contentsignals.org/
+
+# ---- Default: allow general crawlers (Google, Bing, etc.) ----
+User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+Allow: /
+Disallow: /api/
+
+# ---- AI training crawlers: blocked ----
+# OpenAI training crawler
+User-agent: GPTBot
+Disallow: /
+
+# Anthropic training crawlers
+User-agent: ClaudeBot
+Disallow: /
+User-agent: anthropic-ai
+Disallow: /
+User-agent: Claude-Web
+Disallow: /
+
+# Google extended (controls Gemini/Vertex training use)
+User-agent: Google-Extended
+Disallow: /
+
+# Common Crawl (training corpus)
+User-agent: CCBot
+Disallow: /
+
+# Meta / Llama training
+User-agent: Meta-ExternalAgent
+Disallow: /
+User-agent: FacebookBot
+Disallow: /
+
+# ByteDance / Bytespider (training)
+User-agent: Bytespider
+Disallow: /
+
+# Cohere
+User-agent: cohere-ai
+Disallow: /
+User-agent: cohere-training-data-crawler
+Disallow: /
+
+# PerplexityBot training crawler
+User-agent: PerplexityBot
+Disallow: /
+
+# Diffbot
+User-agent: Diffbot
+Disallow: /
+
+# Omgili / Webz
+User-agent: Omgilibot
+Disallow: /
+User-agent: Omgili
+Disallow: /
+
+# Apple intelligence training
+User-agent: Applebot-Extended
+Disallow: /
+
+# Timpi
+User-agent: Timpibot
+Disallow: /
+
+# DuckAssistBot training
+User-agent: DuckAssistBot
+Disallow: /
+
+# Amazon Bedrock training
+User-agent: Amazonbot
+Disallow: /
+
+# ---- AI search / answer agents: allowed (with no training) ----
+# These crawl to answer user queries in real time, not to train.
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /api/
+
+User-agent: PerplexityBot-User
+Allow: /
+Disallow: /api/
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /api/
+
+User-agent: Claude-User
+Allow: /
+Disallow: /api/
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /api/
+
+# ---- Sitemap ----
+Sitemap: https://devcatapult.com/sitemap.xml

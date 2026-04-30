@@ -5,10 +5,14 @@ const GA_TRACKING_ID = "G-QZK2D7ZVWJ";
 const orgSchema = {
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
+  "@id": "https://devcatapult.com/#organization",
   name: "Catapult",
+  alternateName: "Catapult Studio",
   description:
     "Independent studio for websites, SEO, and AI consulting. We build the systems behind modern brands.",
   url: "https://devcatapult.com",
+  image: "https://devcatapult.com/static/og.png",
+  slogan: "Sites that rank. AI that ships.",
   serviceType: [
     "Web Design",
     "Web Development",
@@ -24,6 +28,26 @@ const orgSchema = {
     "LLM applications",
     "Conversion optimization",
   ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "hello@devcatapult.com",
+    contactType: "customer support",
+    availableLanguage: ["English"],
+    areaServed: "Worldwide",
+  },
+  sameAs: [],
+};
+
+const siteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://devcatapult.com/#website",
+  name: "Catapult",
+  url: "https://devcatapult.com",
+  description:
+    "Independent studio for websites, SEO, and AI consulting.",
+  publisher: { "@id": "https://devcatapult.com/#organization" },
+  inLanguage: "en-US",
 };
 
 export default function Document() {
@@ -89,6 +113,10 @@ export default function Document() {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}
         />
       </Head>
       <body>
