@@ -10,7 +10,10 @@ import { Big_Shoulders, Space_Mono } from "next/font/google";
    as a variable font with optical-size + weight axes. */
 const display = Big_Shoulders({
   subsets: ["latin"],
-  weight: ["400", "700", "800", "900"],
+  /* Codebase uses only the implicit 400 (brand wordmark) and 900 (font-black
+     headlines, marquee, principles, work). 700/800 not referenced — dropped
+     to shave font payload and improve LCP. */
+  weight: ["400", "900"],
   variable: "--font-display",
   display: "swap",
 });
@@ -18,7 +21,8 @@ const display = Big_Shoulders({
 const mono = Space_Mono({
   subsets: ["latin"],
   weight: ["400", "700"],
-  style: ["normal", "italic"],
+  /* Italic isn't used anywhere — dropped to halve the mono font payload. */
+  style: ["normal"],
   variable: "--font-mono",
   display: "swap",
 });

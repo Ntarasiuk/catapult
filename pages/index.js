@@ -66,27 +66,20 @@ function Hero() {
         style={{ animationDelay: "0.15s" }}
       />
 
-      {/* Headline */}
+      {/* Headline — no entrance animation: this is the LCP element, so we
+          let it paint instantly. The surrounding eyebrow/sub/CTAs still
+          stagger in with `animate-rise`/`animate-fade`. */}
       <h1 className="relative font-display font-black tracking-ultratight leading-[0.85] text-ink uppercase">
-        <span
-          className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem] animate-rise"
-          style={{ animationDelay: "0.25s" }}
-        >
+        <span className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
           SITES THAT
         </span>
-        <span
-          className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem] animate-rise"
-          style={{ animationDelay: "0.4s" }}
-        >
+        <span className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
           <span className="bg-ink text-acid px-3 md:px-5 inline-block">
             RANK.
           </span>{" "}
           AI
         </span>
-        <span
-          className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem] animate-rise"
-          style={{ animationDelay: "0.55s" }}
-        >
+        <span className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
           THAT SHIPS.
         </span>
       </h1>
