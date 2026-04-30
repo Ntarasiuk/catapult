@@ -1,5 +1,3 @@
-const { Client } = require("@notionhq/client");
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -16,37 +14,54 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Email is required" });
   }
 
-  if (!process.env.NOTION_TOKEN || !process.env.NOTION_DATABASE_ID) {
+  const token = process.env.TELEGRAM_BOT_KEY;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) {
     return res
       .status(500)
-      .json({ error: "Notion is not configured on the server" });
+      .json({ error: "Telegram is not configured on the server" });
   }
 
-  const notion = new Client({ auth: process.env.NOTION_TOKEN });
-  const databaseId = process.env.NOTION_DATABASE_ID;
+  const escape = (s) =>
+    String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
 
-  const detail =
-    company && company_url
-      ? `${company} — ${company_url}`
-      : company || company_url || "";
+  const lines = [
+    "<b>📨 New Catapult brief</b>",
+    `<b>Email:</b> ${escape(email)}`,
+    `<b>Type:</b> ${escape(type)}`,
+  ];
+  if (company) lines.push(`<b>Company:</b> ${escape(company)}`);
+  if (company_url) lines.push(`<b>Details:</b>\n${escape(company_url)}`);
 
   try {
-    const response = await notion.pages.create({
-      parent: { database_id: databaseId },
-      properties: {
-        title: { title: [{ text: { content: email } }] },
-        Type: { type: "select", select: { name: type } },
-        Company: {
-          type: "rich_text",
-          rich_text: [{ text: { content: detail } }],
-        },
-      },
-    });
-    return res.status(201).json({ error: "", data: response });
+    const tgRes = await fetch(
+      `https://api.telegram.org/bot${token}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: lines.join("\n"),
+          parse_mode: "HTML",
+          disable_web_page_preview: true,
+        }),
+      }
+    );
+    const data = await tgRes.json();
+    if (!tgRes.ok || !data.ok) {
+      console.error("Telegram error:", data);
+      return res
+        .status(502)
+        .json({ error: data.description || "Failed to deliver message" });
+    }
+    return res.status(201).json({ error: "", ok: true });
   } catch (error) {
-    console.error("Notion error:", error.body || error);
+    console.error("Telegram request failed:", error);
     return res
       .status(500)
-      .json({ error: error.body || "Failed to submit. Please try again." });
+      .json({ error: "Failed to submit. Please try again." });
   }
 }
