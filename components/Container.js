@@ -127,19 +127,19 @@ function SiteFooter() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-6 font-mono text-[11px] uppercase tracking-[0.16em]">
             <div>
               <div className="text-ink-faint">Practices</div>
-              <ul className="mt-2 space-y-1.5 text-ink font-bold">
+              <ul className="mt-2 text-ink font-bold">
                 <li>
-                  <a href="#services" className="hover:text-acid-deep transition-colors">
+                  <a href="#services" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
                     → Websites
                   </a>
                 </li>
                 <li>
-                  <a href="#services" className="hover:text-acid-deep transition-colors">
+                  <a href="#services" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
                     → SEO
                   </a>
                 </li>
                 <li>
-                  <a href="#services" className="hover:text-acid-deep transition-colors">
+                  <a href="#services" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
                     → AI
                   </a>
                 </li>
@@ -147,19 +147,19 @@ function SiteFooter() {
             </div>
             <div>
               <div className="text-ink-faint">Studio</div>
-              <ul className="mt-2 space-y-1.5 text-ink font-bold">
+              <ul className="mt-2 text-ink font-bold">
                 <li>
-                  <a href="#work" className="hover:text-acid-deep transition-colors">
+                  <a href="#work" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
                     → Work
                   </a>
                 </li>
                 <li>
-                  <a href="#approach" className="hover:text-acid-deep transition-colors">
+                  <a href="#approach" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
                     → Approach
                   </a>
                 </li>
                 <li>
-                  <a href="#contact" className="hover:text-acid-deep transition-colors">
+                  <a href="#contact" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
                     → Contact
                   </a>
                 </li>
@@ -167,11 +167,11 @@ function SiteFooter() {
             </div>
             <div>
               <div className="text-ink-faint">Reach</div>
-              <ul className="mt-2 space-y-1.5 text-ink font-bold">
+              <ul className="mt-2 text-ink font-bold">
                 <li>
                   <a
                     href="mailto:hello@devcatapult.com"
-                    className="hover:text-acid-deep transition-colors lowercase tracking-normal"
+                    className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors lowercase tracking-normal"
                   >
                     hello@devcatapult.com
                   </a>
