@@ -34,7 +34,7 @@ export default function AsciiField({
   className = "",
   style,
   weight = 900,
-  family = '"Big Shoulders Display", Impact, sans-serif',
+  family = "var(--font-display), \"Big Shoulders Display\", Impact, sans-serif",
   haloRadius = 11,
   charClass = "text-ink",
   /* How often (per second) the cursor disruption re-rolls each cell.
@@ -147,9 +147,24 @@ export default function AsciiField({
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "#fff";
 
+      /* Canvas's `font` property doesn't resolve CSS variables. Read the
+         resolved font-family from the wrap element's computed style and
+         substitute it into the family string. */
+      let resolvedFamily = family;
+      if (wrapRef.current) {
+        const computed = getComputedStyle(wrapRef.current);
+        const varMatch = family.match(/var\((--[^),]+)[^)]*\)/);
+        if (varMatch) {
+          const resolved = computed.getPropertyValue(varMatch[1]).trim();
+          if (resolved) {
+            resolvedFamily = family.replace(varMatch[0], resolved);
+          }
+        }
+      }
+
       const lines = text.split("\n");
       let fontSize = Math.floor((canvas.height / lines.length) * 0.94);
-      ctx.font = `${weight} ${fontSize}px ${family}`;
+      ctx.font = `${weight} ${fontSize}px ${resolvedFamily}`;
       let maxLineWidth = 0;
       for (const line of lines) {
         maxLineWidth = Math.max(maxLineWidth, ctx.measureText(line).width);
@@ -160,7 +175,7 @@ export default function AsciiField({
           8,
           Math.floor((fontSize * targetWidth) / maxLineWidth)
         );
-        ctx.font = `${weight} ${fontSize}px ${family}`;
+        ctx.font = `${weight} ${fontSize}px ${resolvedFamily}`;
       }
 
       ctx.textBaseline = "middle";
@@ -255,12 +270,16 @@ export default function AsciiField({
     };
   }, [grid]);
 
-  /* render loop */
+  /* render loop — start deferred until the browser is idle so the heavy
+     per-frame string-building doesn't compete with FCP/LCP. */
   useEffect(() => {
     let raf;
+    let idleHandle;
+    let cancelled = false;
     const start =
       typeof performance !== "undefined" ? performance.now() : Date.now();
     const tick = (now) => {
+      if (cancelled) return;
       const elapsed = (now - start) / 1000; // seconds
       const t = elapsed * 3.6; // legacy time scale used by the wave maths
       const mask = maskRef.current;
@@ -333,8 +352,27 @@ export default function AsciiField({
       pre.textContent = out;
       raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+
+    const beginLoop = () => {
+      if (cancelled) return;
+      raf = requestAnimationFrame(tick);
+    };
+
+    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      idleHandle = window.requestIdleCallback(beginLoop, { timeout: 1500 });
+    } else {
+      idleHandle = setTimeout(beginLoop, 0);
+    }
+
+    return () => {
+      cancelled = true;
+      if (typeof window !== "undefined" && typeof window.cancelIdleCallback === "function" && typeof idleHandle === "number") {
+        window.cancelIdleCallback(idleHandle);
+      } else if (idleHandle) {
+        clearTimeout(idleHandle);
+      }
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [grid, haloRadius, disruptionRate]);
 
   return (

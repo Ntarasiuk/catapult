@@ -23,7 +23,7 @@ html,
 body {
   background-color: var(--bone);
   color: var(--ink);
-  font-family: "Space Mono", ui-monospace, monospace;
+  font-family: var(--font-mono, "Space Mono"), ui-monospace, monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

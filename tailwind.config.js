@@ -14,7 +14,9 @@ module.exports = {
           DEFAULT: "#080808",
           soft: "#1A1A1A",
           muted: "#444444",
-          faint: "#7A7368",
+          /* Was #7A7368 — failed WCAG AA contrast on bone (3.62:1).
+             #5A5247 lands at ~6.2:1 which clears 4.5:1 for normal text. */
+          faint: "#5A5247",
         },
         acid: {
           DEFAULT: "#CCFF02",
@@ -22,9 +24,19 @@ module.exports = {
         },
       },
       fontFamily: {
-        display: ['"Big Shoulders Display"', "Impact", "sans-serif"],
-        mono: ['"Space Mono"', "ui-monospace", "monospace"],
-        sans: ['"Space Mono"', ...fontFamily.sans],
+        display: [
+          "var(--font-display)",
+          '"Big Shoulders Display"',
+          "Impact",
+          "sans-serif",
+        ],
+        mono: [
+          "var(--font-mono)",
+          '"Space Mono"',
+          "ui-monospace",
+          "monospace",
+        ],
+        sans: ["var(--font-mono)", '"Space Mono"', ...fontFamily.sans],
       },
       letterSpacing: {
         ultratight: "-0.06em",

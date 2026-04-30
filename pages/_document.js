@@ -54,17 +54,8 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;600;700;800;900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
-          rel="stylesheet"
-        />
-
+        {/* Fonts are self-hosted via next/font in _app.js — no render-blocking
+            Google Fonts request needed. */}
         <link href="/static/favicons/favicon.ico" rel="shortcut icon" />
         <link href="/static/favicons/site.webmanifest" rel="manifest" />
         <link

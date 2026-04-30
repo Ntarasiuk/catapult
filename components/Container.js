@@ -81,19 +81,19 @@ function SiteHeader() {
         <nav className="flex items-center gap-2 md:gap-3">
           <a
             href="#services"
-            className="hidden sm:inline-flex px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
+            className="hidden sm:inline-flex items-center px-3 py-3 min-h-[44px] font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
           >
             Services
           </a>
           <a
             href="#work"
-            className="hidden md:inline-flex px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
+            className="hidden md:inline-flex items-center px-3 py-3 min-h-[44px] font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
           >
             Work
           </a>
           <a
             href="#approach"
-            className="hidden md:inline-flex px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
+            className="hidden md:inline-flex items-center px-3 py-3 min-h-[44px] font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
           >
             Approach
           </a>
