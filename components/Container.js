@@ -10,7 +10,7 @@ export default function Container(props) {
     title: "Catapult — Studio for websites, SEO, and AI",
     description:
       "Independent studio. We build the systems behind modern brands — websites that convert, search that ranks, and AI that ships.",
-    image: "https://devcatapult.com/static/images/banner.webp",
+    image: "https://devcatapult.com/static/og.png",
     type: "website",
     ...customMeta,
   };
@@ -29,10 +29,14 @@ export default function Container(props) {
         <meta property="og:title" content={meta.title} />
         <meta property="og:description" content={meta.description} />
         <meta property="og:image" content={meta.image} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="Catapult — sites that rank. AI that ships." />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={meta.title} />
         <meta name="twitter:description" content={meta.description} />
         <meta name="twitter:image" content={meta.image} />
+        <meta name="twitter:image:alt" content="Catapult — sites that rank. AI that ships." />
       </Head>
       <a href="#main" className="skip-nav">
         Skip to content
