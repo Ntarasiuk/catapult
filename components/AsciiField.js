@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const DENSITY = " .·:-=+*#%@";
-const NOISE_CHARS = " .·:-=+*<>/\\|!?#%@☄";
+const NOISE_CHARS = " .·:-catapult☄️☄️☄️☄️☄️☄️";
 const SUPERSAMPLE = 2;
 
 /* Deterministic 3D hash → [0, 1). Stable per (x, y, t), so disruption cells
@@ -156,7 +156,10 @@ export default function AsciiField({
       }
       const targetWidth = canvas.width * 0.94;
       if (maxLineWidth > targetWidth && maxLineWidth > 0) {
-        fontSize = Math.max(8, Math.floor((fontSize * targetWidth) / maxLineWidth));
+        fontSize = Math.max(
+          8,
+          Math.floor((fontSize * targetWidth) / maxLineWidth)
+        );
         ctx.font = `${weight} ${fontSize}px ${family}`;
       }
 
@@ -212,7 +215,11 @@ export default function AsciiField({
       maskRef.current = mask;
       charGridRef.current = charGrid;
     };
-    if (typeof document !== "undefined" && document.fonts && document.fonts.ready) {
+    if (
+      typeof document !== "undefined" &&
+      document.fonts &&
+      document.fonts.ready
+    ) {
       document.fonts.ready.then(buildMask).catch(buildMask);
     } else {
       buildMask();
@@ -251,7 +258,8 @@ export default function AsciiField({
   /* render loop */
   useEffect(() => {
     let raf;
-    const start = (typeof performance !== "undefined" ? performance.now() : Date.now());
+    const start =
+      typeof performance !== "undefined" ? performance.now() : Date.now();
     const tick = (now) => {
       const elapsed = (now - start) / 1000; // seconds
       const t = elapsed * 3.6; // legacy time scale used by the wave maths
@@ -351,3 +359,4 @@ export default function AsciiField({
     </div>
   );
 }
+
