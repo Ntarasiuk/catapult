@@ -1,123 +1,188 @@
-import cn from "classnames";
-import { useTheme } from "next-themes";
 import Head from "next/head";
-import NextLink from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-
-function NavItem({ href, text }) {
-  const router = useRouter();
-  const isActive = router.asPath === href;
-
-  return (
-    <NextLink href={href}>
-      <a
-        className={cn(
-          isActive
-            ? "font-semibold text-gray-800 dark:text-gray-200"
-            : "font-normal text-gray-600 dark:text-gray-400",
-          "hidden md:inline-block p-1 sm:px-3 sm:py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-all"
-        )}
-      >
-        <span className="capsize">{text}</span>
-      </a>
-    </NextLink>
-  );
-}
+import Cursor from "./Cursor";
 
 export default function Container(props) {
-  const [mounted, setMounted] = useState(false);
-  const { resolvedTheme, setTheme } = useTheme();
-
-  // After mounting, we have access to the theme
-  useEffect(() => setMounted(true), []);
-
   const { children, ...customMeta } = props;
   const router = useRouter();
   const meta = {
-    title: "Catapult – Know your devs.",
-    description: `Verified developer profiles.`,
+    title: "Catapult — Studio for websites, SEO, and AI",
+    description:
+      "Independent studio. We build the systems behind modern brands — websites that convert, search that ranks, and AI that ships.",
     image: "https://devcatapult.com/static/images/banner.webp",
     type: "website",
     ...customMeta,
   };
+  const url = `https://devcatapult.com${router.asPath}`;
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900">
+    <>
       <Head>
         <title>{meta.title}</title>
         <meta name="robots" content="follow, index" />
-        <meta content={meta.description} name="description" />
-        <meta
-          property="og:url"
-          content={`https://devcatapult.com${router.asPath}`}
-        />
-        <link
-          rel="canonical"
-          href={`https://devcatapult.com${router.asPath}`}
-        />
+        <meta name="description" content={meta.description} />
+        <link rel="canonical" href={url} />
+        <meta property="og:url" content={url} />
         <meta property="og:type" content={meta.type} />
         <meta property="og:site_name" content="Catapult" />
-        <meta property="og:description" content={meta.description} />
         <meta property="og:title" content={meta.title} />
+        <meta property="og:description" content={meta.description} />
         <meta property="og:image" content={meta.image} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={meta.title} />
         <meta name="twitter:description" content={meta.description} />
         <meta name="twitter:image" content={meta.image} />
-        {meta.date && (
-          <meta property="article:published_time" content={meta.date} />
-        )}
       </Head>
-      <div className="flex flex-col justify-center px-8">
-        <nav className="flex items-center justify-between w-full relative max-w-2xl border-gray-200 dark:border-gray-700 mx-auto pt-8 pb-8 sm:pb-8  text-gray-900 bg-gray-50  dark:bg-gray-900 bg-opacity-60 dark:text-gray-100">
-          <a href="#skip" className="skip-nav">
-            Skip to content
-          </a>
-          <div className="ml-[-0.60rem]"></div>
-          <button
-            aria-label="Toggle Dark Mode"
-            type="button"
-            className="w-9 h-9 bg-gray-200 rounded-lg dark:bg-gray-600 flex items-center justify-center  hover:ring-2 ring-gray-300  transition-all"
-            onClick={() =>
-              setTheme(resolvedTheme === "dark" ? "light" : "dark")
-            }
+      <a href="#main" className="skip-nav">
+        Skip to content
+      </a>
+      <Cursor />
+      <SiteHeader />
+      <main id="main">{children}</main>
+      <SiteFooter />
+    </>
+  );
+}
+
+function SiteHeader() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <header
+      className={`sticky top-0 z-30 transition-[background,border] duration-200 ${
+        scrolled
+          ? "bg-bone/95 backdrop-blur-sm border-b-2 border-ink"
+          : "bg-transparent border-b-2 border-transparent"
+      }`}
+    >
+      <div className="max-w-[1440px] mx-auto px-5 md:px-10 h-14 md:h-16 flex items-center justify-between">
+        <a
+          href="#top"
+          className="font-display font-black text-2xl md:text-[28px] tracking-ultratight leading-none uppercase text-ink"
+        >
+          Catapult
+          <span className="text-ink-muted">/</span>
+          <span className="text-ink-muted text-sm align-top tracking-wider">
+            STUDIO
+          </span>
+        </a>
+        <nav className="flex items-center gap-2 md:gap-3">
+          <a
+            href="#services"
+            className="hidden sm:inline-flex px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
           >
-            {mounted && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                className="w-5 h-5 text-gray-800 dark:text-gray-200"
-              >
-                {resolvedTheme === "dark" ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                  />
-                )}
-              </svg>
-            )}
-          </button>
+            Services
+          </a>
+          <a
+            href="#work"
+            className="hidden md:inline-flex px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
+          >
+            Work
+          </a>
+          <a
+            href="#approach"
+            className="hidden md:inline-flex px-3 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
+          >
+            Approach
+          </a>
+          <a
+            href="#contact"
+            className="btn-ink"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-acid animate-pulse" aria-hidden />
+            <span>Start a project</span>
+          </a>
         </nav>
       </div>
-      <main
-        id="skip"
-        className="flex flex-col justify-center px-8 bg-gray-50 dark:bg-gray-900"
-      >
-        {children}
-        {/* <Footer /> */}
-      </main>
-    </div>
+    </header>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="border-t-2 border-ink mt-32 md:mt-40 bg-bone">
+      <div className="max-w-[1440px] mx-auto px-5 md:px-10 py-12 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10">
+          <div>
+            <div className="font-display font-black text-5xl md:text-7xl tracking-ultratight leading-none uppercase text-ink">
+              Catapult
+              <span className="text-acid-deep">*</span>
+            </div>
+            <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted">
+              [ Studio for websites, SEO &amp; AI ]
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-6 font-mono text-[11px] uppercase tracking-[0.16em]">
+            <div>
+              <div className="text-ink-faint">Practices</div>
+              <ul className="mt-2 space-y-1.5 text-ink font-bold">
+                <li>
+                  <a href="#services" className="hover:text-acid-deep transition-colors">
+                    → Websites
+                  </a>
+                </li>
+                <li>
+                  <a href="#services" className="hover:text-acid-deep transition-colors">
+                    → SEO
+                  </a>
+                </li>
+                <li>
+                  <a href="#services" className="hover:text-acid-deep transition-colors">
+                    → AI
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <div className="text-ink-faint">Studio</div>
+              <ul className="mt-2 space-y-1.5 text-ink font-bold">
+                <li>
+                  <a href="#work" className="hover:text-acid-deep transition-colors">
+                    → Work
+                  </a>
+                </li>
+                <li>
+                  <a href="#approach" className="hover:text-acid-deep transition-colors">
+                    → Approach
+                  </a>
+                </li>
+                <li>
+                  <a href="#contact" className="hover:text-acid-deep transition-colors">
+                    → Contact
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <div className="text-ink-faint">Reach</div>
+              <ul className="mt-2 space-y-1.5 text-ink font-bold">
+                <li>
+                  <a
+                    href="mailto:hello@devcatapult.com"
+                    className="hover:text-acid-deep transition-colors lowercase tracking-normal"
+                  >
+                    hello@devcatapult.com
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div className="mt-12 pt-6 border-t-2 border-ink flex flex-col md:flex-row md:items-center md:justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted">
+          <span>© {new Date().getFullYear()} Catapult — Made independently.</span>
+          <span className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-acid animate-pulse" aria-hidden />
+            <span>devcatapult.com — Online</span>
+          </span>
+        </div>
+      </div>
+    </footer>
   );
 }

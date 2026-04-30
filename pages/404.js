@@ -1,26 +1,30 @@
 import Container from "components/Container";
 import Link from "next/link";
+import AsciiField from "components/AsciiField";
 
 export default function NotFound() {
   return (
-    <Container title="404 – Catapult">
-      <div className="flex flex-col justify-center items-start max-w-2xl mx-auto mb-16">
-        <h1 className="font-bold text-3xl md:text-5xl tracking-tight mb-4 text-black dark:text-white">
-          451 – Unavailable For Legal Reasons
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Why show a generic 404 when I can make it sound mysterious? It seems
-          you&apos;ve found something that used to exist, or you spelled
-          something wrong. I&apos;m guessing you spelled something wrong. Can
-          you double check that URL?
+    <Container title="404 — Catapult">
+      <section className="px-5 md:px-10 max-w-[1440px] mx-auto pt-12 md:pt-20 pb-24 md:pb-40 min-h-[70vh] flex flex-col justify-center">
+        <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted font-bold">
+          <span className="w-2 h-2 bg-acid-deep block animate-pulse" aria-hidden />
+          <span>ERR_404 / OFF THE MAP</span>
+        </div>
+        <AsciiField text={"NOTHING\nHERE"} className="mt-8" haloRadius={10} />
+        <h1 className="sr-only">404 — Page not found</h1>
+        <p className="mt-10 max-w-xl text-base md:text-lg text-ink leading-relaxed font-mono">
+          <span className="text-ink-muted">[ &gt; ]</span> The page you&rsquo;re
+          looking for has either moved, been retired, or never existed. Easy
+          fix.
         </p>
-        <Link href="/">
-          <a className="p-1 sm:p-4 w-64 font-bold mx-auto bg-gray-200 dark:bg-gray-800 text-center rounded-md text-black dark:text-white">
-            Return Home
-          </a>
-        </Link>
-      </div>
+        <div className="mt-12">
+          <Link href="/" className="btn-acid">
+            <span className="w-2 h-2 bg-ink block" aria-hidden />
+            <span>Back to home</span>
+            <span aria-hidden>→</span>
+          </Link>
+        </div>
+      </section>
     </Container>
   );
 }
-
