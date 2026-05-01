@@ -210,6 +210,13 @@ body::after {
 .c-accent  { color: #A6CC02; font-weight: 700; }   /* brand acid-deep */
 .c-puff    { color: #999; }      /* death poof — desaturated */
 .c-knight  { color: #6F2E1B; }   /* rider — warm rust, same on player + enemy */
+.c-egg     { color: #E8B843; }   /* yellow egg */
+.c-bounder { color: #C97A2C; }   /* beige Bounder enemy bird */
+.c-hunter  { color: #B11E1E; }   /* red Hunter (= same as c-enemy default) */
+.c-shadow  { color: #5A5A5A; }   /* gray Shadow Lord */
+.c-ptero   { color: #8E1B4F; }   /* pterodactyl crimson */
+.c-ptero-hi{ color: #FF3DA6; font-weight: 700; }  /* mouth-open warning glow */
+.c-troll   { color: #4A1810; }   /* lava troll dark */
 .joust-game-screen:focus {
   background: rgba(204, 255, 2, 0.05);
 }

@@ -27,8 +27,14 @@ const C_ROCK_DK = 6;
 const C_HUD     = 7;
 const C_ACCENT  = 8;
 const C_PUFF    = 9;
-const C_KNIGHT  = 10;  // the rider — same color regardless of player/enemy
-// Class names — index matches the constants above. Index 0 (default) emits no span.
+const C_KNIGHT  = 10;
+const C_EGG     = 11;
+const C_BOUNDER = 12;       // beige Bounder enemy variant
+const C_HUNTER  = 13;       // red Hunter (same as C_ENEMY but kept distinct)
+const C_SHADOW  = 14;       // gray Shadow Lord
+const C_PTERO   = 15;       // pterodactyl crimson
+const C_PTERO_HI = 16;      // pterodactyl mouth (when open = killable)
+const C_TROLL   = 17;
 const COLOR_CLASSES = [
   "",        // C_DEFAULT
   "c-player",
@@ -41,6 +47,13 @@ const COLOR_CLASSES = [
   "c-accent",
   "c-puff",
   "c-knight",
+  "c-egg",
+  "c-bounder",
+  "c-hunter",
+  "c-shadow",
+  "c-ptero",
+  "c-ptero-hi",
+  "c-troll",
 ];
 
 // How many top rows of a 9-row sprite are the rider (vs the creature body).
@@ -71,15 +84,39 @@ function lavaTopRow(wave) {
 //   - Floor / platform Y values match nametable-extracted layout.
 // Physics — scaled to the 192x64 grid so vertical/horizontal speeds *visually*
 // match the previous 160x48 grid (cells per frame × cells per viewport unit).
-const GRAVITY = 0.060;
-const MAX_FALL = 0.93;
-const FLAP_IMPULSE = -1.04;
-const ACCEL = 0.102;
-const MAX_VX = 1.38;
+// Slowed ~25% from prior tuning — game read as too frantic.
+const GRAVITY = 0.045;
+const MAX_FALL = 0.70;
+const FLAP_IMPULSE = -0.78;
+const ACCEL = 0.075;
+const MAX_VX = 1.00;
 const FRICTION_GROUND = 0.86;
 const FRICTION_AIR = 0.995;
 const RESPAWN_FRAMES = 90;
 const RESPAWN_INVULN_FRAMES = 90;
+
+// Egg lifecycle (frames @ 60Hz)
+const EGG_HATCH_FRAMES   = 360;     // 6s on a platform before hatching
+const EGG_POINTS         = 500;
+const UNMOUNTED_REMOUNT_FRAMES = 240; // walking unmounted enemy will re-mount after this
+const UNMOUNTED_POINTS   = 100;
+
+// Pterodactyl
+const PTERO_SPAWN_DELAY_BASE = 1500; // 25s of no kills
+const PTERO_SPEED            = 1.0;  // cells/frame
+const PTERO_KILL_POINTS      = 1000;
+const PTERO_MOUTH_OPEN_FRAMES = 18;  // window of vulnerability
+const PTERO_MOUTH_CYCLE       = 90;  // frames between mouth opens
+
+// Lava troll
+const TROLL_REACH_HEIGHT  = 6;       // cells the hand reaches above lava top
+const TROLL_GRAB_X_RANGE  = 4;       // horizontal grab radius
+const TROLL_RISE_INTERVAL = 240;     // frames between troll rises (4s)
+const TROLL_RISE_FRAMES   = 60;      // hand stays risen for 1s
+
+// Wave / score
+const SCORE_PER_KILL = 750;
+const EXTRA_LIFE_THRESHOLD = 20000;
 
 // Fixed timestep — physics runs at this rate regardless of monitor refresh
 const LOGIC_HZ = 60;
@@ -96,22 +133,103 @@ const KEY_MAP = {
   KeyJ: "flap",
 };
 
-function makeEntity(x, y, isPlayer, facing) {
+// Knight = player or enemy mounted on a flying creature (same shape, palette swap).
+// Enemy archetypes:
+//   "bounder" — slow, dumb (most common, beige) — easiest to joust
+//   "hunter"  — medium, more aggressive (red, currently the main enemy)
+//   "shadow"  — fast, persistent (gray) — hardest
+const ARCHETYPES = {
+  bounder: { speed: 0.40, flapRate: 0.012, score: 500,  color: C_BOUNDER },
+  hunter:  { speed: 0.55, flapRate: 0.020, score: 750,  color: C_HUNTER  },
+  shadow:  { speed: 0.75, flapRate: 0.030, score: 1500, color: C_SHADOW  },
+};
+
+function makeEntity(x, y, isPlayer, facing, archetype) {
+  const kind = "knight";
+  const team = isPlayer ? "player" : "enemy";
+  const arch = isPlayer ? null : (archetype || "hunter");
   return {
-    x,
-    y,
-    vx: 0,
-    vy: 0,
+    kind, team, archetype: arch,
+    x, y,
+    vx: 0, vy: 0,
     facing: facing ?? 1,
-    isPlayer: !!isPlayer,
+    isPlayer: !!isPlayer, // legacy compat
     grounded: false,
     alive: true,
     deathFrames: 0,
     invulnFrames: isPlayer ? RESPAWN_INVULN_FRAMES : 0,
-    flapAnimFrames: 0, // counts down after each flap impulse — drives wing animation
-    // Same body for player + enemies — just palette differs (matches arcade Joust)
+    flapAnimFrames: 0,
     h: PLAYER_H,
     w: SPRITE_W,
+  };
+}
+
+function makeEgg(x, y) {
+  return {
+    kind: "egg", team: "neutral",
+    x, y,
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: -0.45,                        // small upward kick — egg "ejects" above the death puff
+    grounded: false,
+    alive: true, deathFrames: 0,
+    hatchTimer: EGG_HATCH_FRAMES,
+    h: 3, w: 4,
+  };
+}
+
+function makeScorePopup(x, y, text, color) {
+  return {
+    kind: "popup", team: "neutral",
+    x, y,
+    vx: 0, vy: -0.25,
+    text,
+    color: color ?? C_ACCENT,
+    lifetime: 50,
+    alive: true, deathFrames: 0,
+    h: 1, w: text.length,
+  };
+}
+
+function makeUnmounted(x, y, facing, archetype) {
+  return {
+    kind: "unmounted", team: "enemy", archetype,
+    x, y,
+    vx: 0, vy: 0,
+    facing: facing ?? 1,
+    grounded: false,
+    alive: true, deathFrames: 0,
+    h: 6, w: 6,
+    remountTimer: UNMOUNTED_REMOUNT_FRAMES,
+  };
+}
+
+function makePtero(state) {
+  // Spawn off-screen on the side opposite the player, fly toward them
+  const player = state.entities[0];
+  const fromLeft = !player || player.x > COLS / 2;
+  const x = fromLeft ? -25 : COLS + 5;
+  const y = 6 + Math.floor(Math.random() * 18);
+  return {
+    kind: "ptero", team: "enemy",
+    x, y,
+    vx: fromLeft ? PTERO_SPEED : -PTERO_SPEED,
+    vy: 0,
+    facing: fromLeft ? 1 : -1,
+    alive: true, deathFrames: 0,
+    h: 5, w: 24,
+    mouthCycle: 0,            // counts up; mouth opens for PTERO_MOUTH_OPEN_FRAMES every PTERO_MOUTH_CYCLE
+  };
+}
+
+function makeTroll(x) {
+  return {
+    kind: "troll", team: "enemy",
+    x,
+    state: "lurking",         // "lurking" | "rising" | "risen" | "retracting"
+    timer: TROLL_RISE_INTERVAL,
+    riseHeight: 0,            // 0..TROLL_REACH_HEIGHT
+    h: 6, w: 5,
+    alive: true, deathFrames: 0,
   };
 }
 
@@ -126,25 +244,52 @@ function createGameState() {
     score: 0,
     lives: 3,
     wave: 1,
-    pendingWave: FIRST_WAVE_DELAY, // first wave spawns after this many frames
+    pendingWave: FIRST_WAVE_DELAY,
     pendingRespawn: 0,
     gameOver: false,
     started: false,
     paused: false,
-    ambient: true, // true until user takes control (immortal player, demo enemies)
+    ambient: true,
     keys: { left: false, right: false },
-    flapQueued: 0, // edge-triggered flap counter consumed in update
+    flapQueued: 0,
     frame: 0,
+    // Pterodactyl state — counts UP toward `delay`, then spawns and resets to 0
+    pteroTimer: 0,
+    // For extra-life thresholds
+    nextExtraLifeAt: EXTRA_LIFE_THRESHOLD,
+    // Tracks when wave 1 spawned (so we don't bump wave counter the first time)
+    firstWaveSpawned: false,
   };
 }
 
+// Wave composition by wave number — borrowed from arcade Joust pacing.
+// Returns an array of archetype names for that wave.
+function waveComposition(wave) {
+  // Cap total enemies at 5 so the screen doesn't get overwhelming
+  const total = Math.min(2 + Math.floor(wave / 2), 5);
+  const out = [];
+  for (let i = 0; i < total; i++) {
+    if (wave <= 2) {
+      out.push("bounder");
+    } else if (wave <= 5) {
+      out.push(i === 0 ? "hunter" : "bounder");
+    } else if (wave <= 9) {
+      out.push(i < total - 1 ? "hunter" : "bounder");
+    } else {
+      const r = Math.random();
+      out.push(r < 0.4 ? "shadow" : r < 0.85 ? "hunter" : "bounder");
+    }
+  }
+  return out;
+}
+
 function spawnWave(state) {
-  const count = Math.min(1 + state.wave, 5);
-  for (let i = 0; i < count; i++) {
-    const x = ((i + 1) * COLS) / (count + 1);
+  const composition = waveComposition(state.wave);
+  for (let i = 0; i < composition.length; i++) {
+    const x = ((i + 1) * COLS) / (composition.length + 1);
     const y = 3 + (i % 2) * 2;
     const facing = i % 2 === 0 ? -1 : 1;
-    state.entities.push(makeEntity(x, y, false, facing));
+    state.entities.push(makeEntity(x, y, false, facing, composition[i]));
   }
 }
 
@@ -234,52 +379,70 @@ function updateEntity(e, state) {
     e.deathFrames++;
     return;
   }
+  switch (e.kind) {
+    case "knight":     updateKnight(e, state); break;
+    case "egg":        updateEgg(e, state); break;
+    case "unmounted":  updateUnmounted(e, state); break;
+    case "ptero":      updatePtero(e, state); break;
+    case "troll":      updateTroll(e, state); break;
+    case "popup":      updatePopup(e, state); break;
+  }
+}
+
+function updatePopup(e /*, state */) {
+  e.y += e.vy;
+  e.vy *= 0.94; // ease the rise
+  e.lifetime--;
+  if (e.lifetime <= 0) {
+    e.alive = false;
+    e.deathFrames = -1; // suppress death-puff
+  }
+}
+
+function updateKnight(e, state) {
   if (e.invulnFrames > 0) e.invulnFrames--;
   if (e.flapAnimFrames > 0) e.flapAnimFrames--;
 
   // ---- Input / AI ----
   let xInput = false;
-  if (e.isPlayer) {
+  if (e.team === "player") {
     if (state.keys.left)  { e.vx -= ACCEL; e.facing = -1; xInput = true; }
     if (state.keys.right) { e.vx += ACCEL; e.facing = 1; xInput = true; }
     while (state.flapQueued > 0) {
       e.vy = FLAP_IMPULSE;
       e.grounded = false;
-      e.flapAnimFrames = 10; // ~165 ms at 60Hz — visible "wing-beat" lift
+      e.flapAnimFrames = 10;
       state.flapQueued--;
     }
   } else {
-    // Simple AI: chase player. Only flaps when airborne (otherwise it's
-    // standing on a platform — flapping wings while perched looks wrong).
+    const arch = ARCHETYPES[e.archetype] || ARCHETYPES.hunter;
     const player = state.entities[0];
     if (player && player.alive) {
       const dx = dxWrap(player.x, e.x);
-      if (dx > 0.5) { e.vx += ACCEL * 0.3; e.facing = 1; xInput = true; }
-      else if (dx < -0.5) { e.vx -= ACCEL * 0.3; e.facing = -1; xInput = true; }
-      const enemyMaxVx = MAX_VX * 0.55;
-      if (e.vx >  enemyMaxVx) e.vx =  enemyMaxVx;
-      if (e.vx < -enemyMaxVx) e.vx = -enemyMaxVx;
+      if (dx > 0.5) { e.vx += ACCEL * arch.speed; e.facing = 1; xInput = true; }
+      else if (dx < -0.5) { e.vx -= ACCEL * arch.speed; e.facing = -1; xInput = true; }
+      const cap = MAX_VX * (0.45 + arch.speed * 0.4); // bounder ~0.61, hunter ~0.67, shadow ~0.75
+      if (e.vx >  cap) e.vx =  cap;
+      if (e.vx < -cap) e.vx = -cap;
 
       if (e.grounded) {
-        // Take off occasionally — the only way to leave a platform
-        if (Math.random() < 0.012) {
+        if (Math.random() < arch.flapRate * 1.5) {
           e.vy = FLAP_IMPULSE * 0.85;
           e.grounded = false;
           e.flapAnimFrames = 10;
         }
       } else {
         const wantHigher = e.y > player.y - 1.5;
-        if (wantHigher && Math.random() < 0.018) {
+        if (wantHigher && Math.random() < arch.flapRate) {
           e.vy = FLAP_IMPULSE * 0.7;
           e.flapAnimFrames = 10;
-        } else if (Math.random() < 0.004) {
+        } else if (Math.random() < arch.flapRate * 0.25) {
           e.vy = FLAP_IMPULSE * 0.55;
           e.flapAnimFrames = 10;
         }
       }
     }
   }
-  // Stash input flag for the friction step below
   e._xInput = xInput;
 
   // ---- Physics ----
@@ -329,6 +492,168 @@ function updateEntity(e, state) {
   if (e.y < 1) { e.y = 1; if (e.vy < 0) e.vy = 0; }
 }
 
+// Egg falls under gravity, rests on platforms. Hatch timer ticks down only
+// while grounded. Touching lava destroys the egg silently.
+function updateEgg(e, state) {
+  e.vy += GRAVITY;
+  if (e.vy > MAX_FALL) e.vy = MAX_FALL;
+  // Mild air drag on horizontal drift; stops quickly on landing
+  e.vx *= e.grounded ? 0.6 : 0.99;
+  const prevY = e.y;
+  e.x = wrapX(e.x + e.vx);
+  e.y += e.vy;
+  // Platform landing
+  const footX = e.x + e.w / 2;
+  const platY = platformAt(footX, prevY + e.h, state.wave);
+  if (platY !== null && e.vy >= 0 && (e.y + e.h) >= platY) {
+    e.y = platY - e.h;
+    e.vy = 0;
+    e.grounded = true;
+  } else {
+    e.grounded = false;
+  }
+  if (e.grounded && e.hatchTimer > 0) {
+    e.hatchTimer--;
+    if (e.hatchTimer === 0) {
+      // Hatch — replace egg with an unmounted enemy
+      e.alive = false;
+      e.deathFrames = -1; // suppress death-puff visuals
+      const archetype = pickHatchedArchetype(state.wave);
+      state.entities.push(makeUnmounted(e.x - 1, e.y - 1, Math.random() < 0.5 ? -1 : 1, archetype));
+    }
+  }
+  // Lava death
+  if (inLava(e.x + e.w / 2, e.y + e.h, state.wave)) {
+    e.alive = false;
+    e.deathFrames = 0;
+  }
+}
+
+function pickHatchedArchetype(wave) {
+  if (wave <= 3) return "bounder";
+  if (wave <= 7) return Math.random() < 0.5 ? "hunter" : "bounder";
+  return Math.random() < 0.4 ? "shadow" : "hunter";
+}
+
+// Unmounted enemy walks left/right on the platform. After a delay, "remounts"
+// (becomes a knight again — flies off looking for the player).
+function updateUnmounted(e, state) {
+  e.vy += GRAVITY;
+  if (e.vy > MAX_FALL) e.vy = MAX_FALL;
+  const prevY = e.y;
+  // Walk in current facing direction at modest speed
+  e.vx = e.facing * 0.3;
+  e.x = wrapX(e.x + e.vx);
+  e.y += e.vy;
+  // Platform landing
+  const footX = e.x + e.w / 2;
+  const platY = platformAt(footX, prevY + e.h, state.wave);
+  if (platY !== null && e.vy >= 0 && (e.y + e.h) >= platY) {
+    e.y = platY - e.h;
+    e.vy = 0;
+    e.grounded = true;
+  } else {
+    e.grounded = false;
+  }
+  // Walked off platform edge → fall a bit then turn around when grounded again
+  if (e.grounded) {
+    // If we're at the edge of our platform, flip
+    const lookahead = footX + e.facing * 2;
+    const aheadPlat = platformAt(lookahead, e.y + e.h - 0.5, state.wave);
+    if (aheadPlat === null || Math.abs(aheadPlat - (e.y + e.h)) > 0.5) {
+      e.facing = -e.facing;
+    }
+    e.remountTimer--;
+    if (e.remountTimer <= 0) {
+      e.alive = false;
+      e.deathFrames = -1;
+      // Remount — spawn a fresh knight (this is the egg's full lifecycle:
+      // egg → unmounted → re-mounted enemy)
+      state.entities.push(makeEntity(e.x, e.y - 4, false, e.facing, e.archetype));
+    }
+  }
+  // Lava death
+  if (inLava(e.x + e.w / 2, e.y + e.h, state.wave)) {
+    e.alive = false;
+    e.deathFrames = 0;
+  }
+}
+
+// Pterodactyl flies horizontally at high speed, wraps. Mouth opens periodically
+// — if a player's lance hits the open mouth, the ptero dies. Otherwise the
+// player dies on contact.
+function updatePtero(e, state) {
+  // Despawn after exiting the screen on the side it was heading toward
+  e.mouthCycle = (e.mouthCycle + 1) % PTERO_MOUTH_CYCLE;
+  e.x += e.vx;
+  // Slight vertical wobble
+  e.vy = Math.sin(e.mouthCycle * 0.07) * 0.15;
+  e.y += e.vy;
+  // Wrap or despawn? In real Joust the ptero keeps coming back. We'll wrap.
+  if (e.x < -30) e.x = COLS + 5;
+  if (e.x > COLS + 30) e.x = -25;
+}
+
+function pteroMouthOpen(e) {
+  return e.mouthCycle < PTERO_MOUTH_OPEN_FRAMES;
+}
+
+// Lava troll: stationary at a fixed x, periodically rises a "hand" up out
+// of the lava. While risen, anyone within reach gets grabbed and pulled down.
+function updateTroll(e, state) {
+  e.timer--;
+  if (e.timer <= 0) {
+    if (e.state === "lurking") {
+      e.state = "rising";
+      e.riseHeight = 0;
+      e.timer = TROLL_RISE_FRAMES;
+    } else if (e.state === "rising" || e.state === "risen") {
+      e.state = "retracting";
+      e.timer = TROLL_RISE_FRAMES;
+    } else {
+      e.state = "lurking";
+      e.timer = TROLL_RISE_INTERVAL;
+      e.riseHeight = 0;
+    }
+  }
+  // Smoothly rise / retract
+  if (e.state === "rising") {
+    e.riseHeight = Math.min(TROLL_REACH_HEIGHT, e.riseHeight + 0.25);
+    if (e.riseHeight >= TROLL_REACH_HEIGHT) e.state = "risen";
+  } else if (e.state === "retracting") {
+    e.riseHeight = Math.max(0, e.riseHeight - 0.2);
+  }
+  // Grab any character within reach while risen
+  if (e.state === "risen" || (e.state === "rising" && e.riseHeight > 2)) {
+    const lavaTop = lavaTopRow(state.wave);
+    const handTopY = lavaTop - e.riseHeight;
+    for (const other of state.entities) {
+      if (other === e || !other.alive) continue;
+      if (other.kind !== "knight") continue;
+      if (state.ambient && other.team === "player") continue;
+      if (other.invulnFrames > 0) continue;
+      const dx = Math.abs(dxWrap(other.x + other.w / 2, e.x));
+      if (dx < TROLL_GRAB_X_RANGE && other.y + other.h >= handTopY) {
+        // Grabbed — pull into lava
+        other.vy = MAX_FALL;
+        other.vx = 0;
+        // Force death next physics step via lava check
+        if (other.team === "player") {
+          state.lives--;
+          if (state.lives <= 0) state.gameOver = true;
+          else state.pendingRespawn = RESPAWN_FRAMES;
+        } else {
+          state.score += SCORE_PER_KILL;
+          checkExtraLife(state);
+          state.entities.push(makeScorePopup(other.x, other.y - 1, "+" + SCORE_PER_KILL, C_TROLL));
+        }
+        other.alive = false;
+        other.deathFrames = 0;
+      }
+    }
+  }
+}
+
 function resolveJousts(state) {
   const ents = state.entities;
   for (let i = 0; i < ents.length; i++) {
@@ -337,60 +662,156 @@ function resolveJousts(state) {
     for (let j = i + 1; j < ents.length; j++) {
       const b = ents[j];
       if (!b.alive) continue;
-      // Ambient mode: player can't die; just bounce off enemies.
-      if (state.ambient && (a.isPlayer || b.isPlayer)) continue;
-      // Skip lethal interaction if either side is in respawn invuln
-      if (a.invulnFrames > 0 || b.invulnFrames > 0) continue;
-      // Compare sprite-center positions
-      const dx = Math.abs(dxWrap(a.x + a.w / 2, b.x + b.w / 2));
-      const dy = Math.abs((a.y + a.h / 2) - (b.y + b.h / 2));
-      if (dx < (a.w + b.w) / 2.5 && dy < (a.h + b.h) / 2.5) {
-        // Joust!
-        const diff = a.y - b.y; // negative = a is higher (smaller y)
-        if (Math.abs(diff) < 0.45) {
-          // Bounce — swap and damp
-          const tmp = a.vx;
-          a.vx = b.vx * 0.7;
-          b.vx = tmp * 0.7;
-          // Shove apart so we don't re-collide next frame
-          if (dxWrap(a.x, b.x) > 0) { a.x = wrapX(a.x + 0.6); b.x = wrapX(b.x - 0.6); }
-          else                       { a.x = wrapX(a.x - 0.6); b.x = wrapX(b.x + 0.6); }
-        } else if (diff < 0) {
-          // a is higher → a wins
-          killOutcome(state, a, b);
-        } else {
-          killOutcome(state, b, a);
-        }
-      }
+      handleCollision(state, a, b);
     }
   }
 }
 
-function killOutcome(state, winner, loser) {
-  loser.alive = false;
-  loser.deathFrames = 0;
-  if (loser.isPlayer) {
-    state.lives--;
-    if (state.lives <= 0) {
-      state.gameOver = true;
+function entitiesOverlap(a, b) {
+  const dx = Math.abs(dxWrap(a.x + a.w / 2, b.x + b.w / 2));
+  const dy = Math.abs((a.y + a.h / 2) - (b.y + b.h / 2));
+  return dx < (a.w + b.w) / 2.5 && dy < (a.h + b.h) / 2.5;
+}
+
+function handleCollision(state, a, b) {
+  // Ambient mode protection — player is invulnerable to all damage
+  const involvesPlayer = a.team === "player" || b.team === "player";
+  if (state.ambient && involvesPlayer) return;
+  // Respawn invuln
+  if ((a.invulnFrames || 0) > 0 || (b.invulnFrames || 0) > 0) return;
+
+  if (!entitiesOverlap(a, b)) return;
+
+  // ---- Knight vs Knight: classic joust ----
+  if (a.kind === "knight" && b.kind === "knight") {
+    const diff = a.y - b.y;
+    if (Math.abs(diff) < 0.45) {
+      // Bounce — swap and damp
+      const tmp = a.vx;
+      a.vx = b.vx * 0.7;
+      b.vx = tmp * 0.7;
+      if (dxWrap(a.x, b.x) > 0) { a.x = wrapX(a.x + 0.6); b.x = wrapX(b.x - 0.6); }
+      else                       { a.x = wrapX(a.x - 0.6); b.x = wrapX(b.x + 0.6); }
+    } else if (diff < 0) {
+      knightKilledBy(state, a, b);
     } else {
-      state.pendingRespawn = RESPAWN_FRAMES;
+      knightKilledBy(state, b, a);
     }
-  } else {
-    state.score += 750;
+    return;
   }
+
+  // ---- Knight vs Egg: collect (player) or break (enemy) ----
+  if ((a.kind === "knight" && b.kind === "egg") ||
+      (a.kind === "egg" && b.kind === "knight")) {
+    const knight = a.kind === "knight" ? a : b;
+    const egg = a.kind === "egg" ? a : b;
+    egg.alive = false;
+    egg.deathFrames = -1;
+    if (knight.team === "player") {
+      state.score += EGG_POINTS;
+      checkExtraLife(state);
+      state.entities.push(makeScorePopup(egg.x - 1, egg.y - 1, "+" + EGG_POINTS, C_EGG));
+    }
+    return;
+  }
+
+  // ---- Knight vs Unmounted: kill the unmounted (player) or nothing (enemy) ----
+  if ((a.kind === "knight" && b.kind === "unmounted") ||
+      (a.kind === "unmounted" && b.kind === "knight")) {
+    const knight = a.kind === "knight" ? a : b;
+    const unmounted = a.kind === "unmounted" ? a : b;
+    if (knight.team === "player") {
+      unmounted.alive = false;
+      unmounted.deathFrames = 0;
+      state.score += UNMOUNTED_POINTS;
+      checkExtraLife(state);
+      state.entities.push(makeScorePopup(unmounted.x, unmounted.y - 1, "+" + UNMOUNTED_POINTS, C_BOUNDER));
+    }
+    return;
+  }
+
+  // ---- Knight vs Pterodactyl ----
+  if ((a.kind === "knight" && b.kind === "ptero") ||
+      (a.kind === "ptero" && b.kind === "knight")) {
+    const knight = a.kind === "knight" ? a : b;
+    const ptero = a.kind === "ptero" ? a : b;
+    // Mouth-hit kill: player must be facing into the ptero AND the mouth open
+    // AND aligned vertically with the mouth (front 25% of ptero on the facing side)
+    const mouthOpen = pteroMouthOpen(ptero);
+    const knightLanceX = knight.x + (knight.facing === 1 ? knight.w : 0);
+    const pteroMouthX = ptero.facing === 1 ? ptero.x + ptero.w : ptero.x;
+    const lanceVsMouthDx = Math.abs(dxWrap(knightLanceX, pteroMouthX));
+    const facingMouth = knight.facing !== ptero.facing; // facing into the ptero
+    if (knight.team === "player" && mouthOpen && facingMouth && lanceVsMouthDx < 4) {
+      ptero.alive = false;
+      ptero.deathFrames = 0;
+      state.score += PTERO_KILL_POINTS;
+      checkExtraLife(state);
+      state.entities.push(makeScorePopup(ptero.x + ptero.w / 2 - 3, ptero.y - 1, "+" + PTERO_KILL_POINTS, C_PTERO_HI));
+    } else if (knight.team === "player") {
+      // Touch death
+      knight.alive = false;
+      knight.deathFrames = 0;
+      state.lives--;
+      if (state.lives <= 0) state.gameOver = true;
+      else state.pendingRespawn = RESPAWN_FRAMES;
+    } else {
+      // Ptero touching enemy knight: kills enemy too (chaos!)
+      knight.alive = false;
+      knight.deathFrames = 0;
+    }
+    return;
+  }
+}
+
+function knightKilledBy(state, winner, loser) {
+  if (loser.team === "player") {
+    loser.alive = false;
+    loser.deathFrames = 0;
+    state.lives--;
+    if (state.lives <= 0) state.gameOver = true;
+    else state.pendingRespawn = RESPAWN_FRAMES;
+  } else {
+    // Enemy killed → spawn an egg at the kill location
+    loser.alive = false;
+    loser.deathFrames = 0;
+    state.entities.push(makeEgg(loser.x + loser.w / 2 - 2, loser.y + 1));
+    const arch = ARCHETYPES[loser.archetype] || ARCHETYPES.hunter;
+    state.score += arch.score;
+    checkExtraLife(state);
+    // Floating "+750" near where the enemy died
+    state.entities.push(makeScorePopup(loser.x, loser.y - 1, "+" + arch.score, arch.color));
+  }
+}
+
+function checkExtraLife(state) {
+  if (state.score >= state.nextExtraLifeAt) {
+    state.lives++;
+    state.nextExtraLifeAt += EXTRA_LIFE_THRESHOLD;
+  }
+}
+
+function isThreat(e) {
+  // What counts as "still in this wave" — enemy knights, eggs (will hatch),
+  // unmounted enemies (will remount). Pterodactyl + troll are independent.
+  return e.alive && (
+    (e.kind === "knight" && e.team === "enemy") ||
+    e.kind === "egg" ||
+    e.kind === "unmounted"
+  );
 }
 
 function maybeAdvanceWave(state) {
-  const enemiesAlive = state.entities.some((e) => !e.isPlayer && e.alive);
-  if (enemiesAlive) return;
+  const threats = state.entities.some(isThreat);
+  if (threats) return;
   if (state.pendingWave === 0) {
     state.pendingWave = NEXT_WAVE_DELAY;
   } else {
     state.pendingWave--;
     if (state.pendingWave === 0) {
-      state.entities = state.entities.filter((e) => e.isPlayer || e.alive);
-      // Don't increment wave on the very first spawn (waves start at 1)
+      // Sweep dead entities + reset ptero timer so the next wave is fresh
+      state.entities = state.entities.filter((e) => e.team === "player" || e.alive || e.kind === "troll");
+      state.pteroTimer = 0;
       if (state.wave === 1 && !state.firstWaveSpawned) {
         state.firstWaveSpawned = true;
       } else {
@@ -399,6 +820,37 @@ function maybeAdvanceWave(state) {
       spawnWave(state);
     }
   }
+}
+
+// Spawn one pterodactyl after `pteroTimer` expires, IF there's no ptero on
+// screen yet and there are still enemy knights/eggs (else just give the
+// player room to breathe between waves).
+function maybePterodactyl(state) {
+  const hasPtero = state.entities.some((e) => e.kind === "ptero" && e.alive);
+  if (hasPtero) return;
+  const threats = state.entities.some(isThreat);
+  if (!threats) {
+    // Reset timer between waves so the inter-wave breather doesn't get
+    // immediately consumed by a ptero on the next wave's first frame.
+    state.pteroTimer = 0;
+    return;
+  }
+  // Late-wave spawns are quicker. Wave 1: 25s, wave 5: 23s, wave 15: 10s.
+  const delay = Math.max(600, PTERO_SPAWN_DELAY_BASE - state.wave * 60);
+  state.pteroTimer++;
+  if (state.pteroTimer >= delay) {
+    state.entities.push(makePtero(state));
+    state.pteroTimer = 0;
+  }
+}
+
+// Place trolls in the lava strip when lava becomes visible. One troll for
+// now — could be expanded to multiple.
+function maybeSpawnTrolls(state) {
+  const haveTroll = state.entities.some((e) => e.kind === "troll");
+  if (haveTroll) return;
+  if (lavaTopRow(state.wave) > BOTTOM_ROW) return; // lava not visible yet
+  state.entities.push(makeTroll(Math.floor(COLS / 2)));
 }
 
 // Find the widest DOM-derived platform — that's the marquee. Used as the
@@ -496,12 +948,15 @@ function renderFrame(state) {
   // Entities
   for (const e of state.entities) {
     if (!e.alive) {
-      if (e.deathFrames < 24) {
+      // deathFrames === -1 → suppress death-puff (used for eggs hatching, etc.)
+      if (e.deathFrames >= 0 && e.deathFrames < 24) {
         const cx = Math.round(e.x);
         const cy = Math.round(e.y) + yOff;
         const puff = e.deathFrames < 12 ? "*" : ".";
-        for (let dy = 0; dy < e.h; dy++) {
-          for (let dx = 0; dx < e.w; dx++) {
+        const ph = e.h || 4;
+        const pw = e.w || 6;
+        for (let dy = 0; dy < ph; dy++) {
+          for (let dx = 0; dx < pw; dx++) {
             const gx = wrapX(cx + dx);
             const gy = cy + dy;
             if (gy >= 0 && gy < grid.length) {
@@ -513,7 +968,8 @@ function renderFrame(state) {
       }
       continue;
     }
-    if (e.invulnFrames > 0 && Math.floor(e.invulnFrames / 4) % 2 === 0) continue;
+    if ((e.invulnFrames || 0) > 0 && Math.floor(e.invulnFrames / 4) % 2 === 0) continue;
+    if (e.kind === "troll") e._lavaTopY = lavaTop; // pass lava reference for clipped render
     drawSprite(grid, colors, e, yOff, state.frame);
   }
 
@@ -564,39 +1020,126 @@ function buildHTML(grid, colors) {
 }
 
 function drawSprite(grid, colors, e, yOff, frame) {
+  switch (e.kind) {
+    case "knight":    drawKnight(grid, colors, e, yOff, frame); break;
+    case "egg":       drawEgg(grid, colors, e, yOff, frame); break;
+    case "unmounted": drawUnmounted(grid, colors, e, yOff, frame); break;
+    case "ptero":     drawPtero(grid, colors, e, yOff, frame); break;
+    case "troll":     drawTroll(grid, colors, e, yOff, frame); break;
+    case "popup":     drawPopup(grid, colors, e, yOff, frame); break;
+  }
+}
+
+function drawPopup(grid, colors, e, yOff /*, frame */) {
+  const cx = Math.round(e.x);
+  const cy = Math.round(e.y) + yOff;
+  if (cy < 0 || cy >= grid.length) return;
+  for (let i = 0; i < e.text.length; i++) {
+    const gx = wrapX(cx + i);
+    grid[cy][gx] = e.text[i];
+    colors[cy][gx] = e.color;
+  }
+}
+
+function placeSprite(grid, colors, sprite, cx, cy, defaultColor, knightRows = 0) {
+  for (let r = 0; r < sprite.length; r++) {
+    const row = sprite[r];
+    const gy = cy + r;
+    if (gy < 0 || gy >= grid.length) continue;
+    const rowColor = r < knightRows ? C_KNIGHT : defaultColor;
+    for (let c = 0; c < row.length; c++) {
+      const ch = row[c];
+      if (ch === " ") continue;
+      const gx = wrapX(cx + c);
+      grid[gy][gx] = ch;
+      colors[gy][gx] = rowColor;
+    }
+  }
+}
+
+function drawKnight(grid, colors, e, yOff, frame) {
   const cx = Math.round(e.x);
   let cy = Math.round(e.y) + yOff;
   const dir = e.facing === 1 ? "_right" : "_left";
-
-  // Both player and enemies use the same shape (knight on creature) —
-  // distinguished only by color (palette swap), like arcade Joust.
   let name;
   if (e.grounded) {
     const moving = Math.abs(e.vx) > 0.05;
     name = moving && Math.floor(frame / 6) % 2 === 0 ? "player_stand_b" : "player_stand_a";
   } else {
-    name = "player_fly";
-    // Visible "wing-beat" lift any time the character is rising. Driven by
-    // velocity (not a discrete flap counter) so it reads continuously while
-    // the player taps J or while the AI sustains altitude.
-    if (e.vy < -0.1) cy -= 2;
+    if (e.vy < -0.1) {
+      cy -= 2;
+      name = Math.floor(frame / 3) % 2 === 0 ? "player_fly" : "player_fly_b";
+    } else {
+      name = "player_fly";
+    }
   }
-
   const sprite = SPRITE_GRIDS[name + dir];
   if (!sprite) return;
-  const bodyColor = e.isPlayer ? C_PLAYER : C_ENEMY;
-  for (let r = 0; r < sprite.length; r++) {
+  // Body color depends on team + (for enemies) archetype
+  let bodyColor;
+  if (e.team === "player") bodyColor = C_PLAYER;
+  else if (e.archetype && ARCHETYPES[e.archetype]) bodyColor = ARCHETYPES[e.archetype].color;
+  else bodyColor = C_ENEMY;
+  placeSprite(grid, colors, sprite, cx, cy, bodyColor, KNIGHT_ROWS);
+}
+
+function drawEgg(grid, colors, e, yOff /*, frame */) {
+  const cx = Math.round(e.x);
+  const cy = Math.round(e.y) + yOff;
+  // Choose visual based on hatchTimer progress
+  const t = e.hatchTimer;
+  const name = t > 200 ? "egg" : t > 80 ? "egg_cracked" : "egg_hatching";
+  const sprite = SPRITE_GRIDS[name];
+  if (!sprite) return;
+  placeSprite(grid, colors, sprite, cx, cy, C_EGG);
+}
+
+function drawUnmounted(grid, colors, e, yOff /*, frame */) {
+  const cx = Math.round(e.x);
+  const cy = Math.round(e.y) + yOff;
+  const dir = e.facing === 1 ? "_right" : "_left";
+  const sprite = SPRITE_GRIDS["unmounted" + dir];
+  if (!sprite) return;
+  const color = e.archetype && ARCHETYPES[e.archetype] ? ARCHETYPES[e.archetype].color : C_ENEMY;
+  placeSprite(grid, colors, sprite, cx, cy, color, 2); // top 2 rows = head/helmet (knight color)
+}
+
+function drawPtero(grid, colors, e, yOff, frame) {
+  const cx = Math.round(e.x);
+  const cy = Math.round(e.y) + yOff;
+  const dir = e.facing === 1 ? "_right" : "_left";
+  const open = pteroMouthOpen(e);
+  const name = (open ? "pterodactyl_open" : "pterodactyl") + dir;
+  const sprite = SPRITE_GRIDS[name];
+  if (!sprite) return;
+  // Use C_PTERO_HI when mouth is open (warning glow), else C_PTERO
+  placeSprite(grid, colors, sprite, cx, cy, open ? C_PTERO_HI : C_PTERO);
+}
+
+function drawTroll(grid, colors, e, yOff, frame) {
+  if (e.riseHeight <= 0) return; // hidden in lava
+  const lavaTop = lavaTopRow(e._waveCache || 1); // not great, but troll renders below
+  // We don't have direct access to state.wave here; cy is computed from
+  // current lavaTop via the renderFrame caller. Fallback approach:
+  const cx = Math.round(e.x) - 2;
+  // Render the hand sprite from (lavaTop - riseHeight) up to lavaTop
+  const sprite = SPRITE_GRIDS.troll_hand;
+  if (!sprite) return;
+  // Sprite is 6 rows tall; we want the BOTTOM of the sprite to be at lavaTop
+  // and the visible portion to be `riseHeight` rows. Crop visually:
+  const visible = Math.ceil(e.riseHeight);
+  const startRow = sprite.length - visible;
+  const cy = (e._lavaTopY ?? BOTTOM_ROW) - visible + yOff;
+  for (let r = startRow; r < sprite.length; r++) {
     const row = sprite[r];
-    const gy = cy + r;
+    const gy = cy + (r - startRow);
     if (gy < 0 || gy >= grid.length) continue;
-    // Top rows = rider/knight (shared brown), rest = bird body (player/enemy color)
-    const rowColor = r < KNIGHT_ROWS ? C_KNIGHT : bodyColor;
     for (let c = 0; c < row.length; c++) {
       const ch = row[c];
-      if (ch === " ") continue; // transparent
+      if (ch === " ") continue;
       const gx = wrapX(cx + c);
       grid[gy][gx] = ch;
-      colors[gy][gx] = rowColor;
+      colors[gy][gx] = C_TROLL;
     }
   }
 }
@@ -660,6 +1203,14 @@ export default function AsciiJoust({ startActive = false }) {
           resolveJousts(s);
           maybeRespawnPlayer(s);
           maybeAdvanceWave(s);
+          maybePterodactyl(s);
+          maybeSpawnTrolls(s);
+          // Cull dead entities periodically (eggs hatch, ptero exits, etc.)
+          if (s.frame % 30 === 0) {
+            s.entities = s.entities.filter(
+              (e) => e.team === "player" || e.alive || (e.deathFrames >= 0 && e.deathFrames < 24)
+            );
+          }
         }
         accumulator -= LOGIC_DT_MS;
         steps++;
