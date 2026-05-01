@@ -173,6 +173,103 @@ body::after {
   will-change: transform;
 }
 
+/* ----- ASCII Joust (original game) ----- */
+.joust-game-wrap {
+  max-width: 100%;
+}
+.joust-game-screen {
+  font-family: var(--font-mono, "Space Mono"), ui-monospace, monospace;
+  /* 160-col grid; sized so the whole game spans roughly viewport width */
+  font-size: clamp(6px, 0.95vw, 14px);
+  letter-spacing: 0;
+  line-height: 1;
+  background: transparent;
+  cursor: text;
+  white-space: pre;
+  display: block;
+  color: var(--ink);
+}
+.joust-game-screen:focus {
+  background: rgba(204, 255, 2, 0.04);
+  outline: none;
+}
+
+/* Color palette for the ASCII game — chosen to read on the bone background
+   under mix-blend-multiply (lighter colors get darkened, so we lean warm). */
+.c-player  { color: #1F8A3D; }   /* deep emerald — visible on bone under multiply */
+.c-enemy   { color: #B11E1E; }   /* enemy crimson */
+.c-lava    { color: #C73215; }   /* deep lava */
+.c-lava-hi { color: #FF7A1A; font-weight: 700; }   /* glowing lava top edge */
+.c-rock    { color: #7A4A1A; }   /* warm rock-brown */
+.c-rock-dk { color: #4A2D10; }   /* shaded cliff face */
+.c-hud     { color: #080808; font-weight: 700; }
+.c-accent  { color: #A6CC02; font-weight: 700; }   /* brand acid-deep */
+.c-puff    { color: #999; }      /* death poof — desaturated */
+.joust-game-screen:focus {
+  background: rgba(204, 255, 2, 0.05);
+}
+
+/* ----- ASCII catapult (Peter Rijks) ----- */
+.ascii-catapult {
+  font-size: clamp(6px, 1.4vw, 13px);
+  letter-spacing: 0;
+  color: var(--ink);
+}
+.ascii-catapult-shot {
+  position: absolute;
+  top: 0;
+  left: 28ch;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1;
+  color: var(--acid-deep);
+  font-weight: 700;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: ascii-catapult-arc 1.6s cubic-bezier(0.3, 0.05, 0.6, 1) forwards;
+}
+@keyframes ascii-catapult-arc {
+  0%   { transform: translate(0, 0)        scale(0.9); opacity: 0; }
+  8%   { transform: translate(2ch, -1ch)   scale(1);   opacity: 1; }
+  30%  { transform: translate(12ch, -3.5ch); opacity: 1; }
+  55%  { transform: translate(24ch, -3ch);  opacity: 1; }
+  80%  { transform: translate(38ch, 1ch);   opacity: 1; }
+  100% { transform: translate(54ch, 10ch);  opacity: 0; }
+}
+
+/* ----- ASCII ostrich gallop strip (frame-by-frame; CSS handles horizontal travel) ----- */
+.ostrich-strip {
+  font-size: clamp(7px, 1.2vw, 12px);
+  line-height: 1;
+}
+.ostrich-track {
+  display: inline-block;
+  white-space: nowrap;
+  transform: translateX(110vw);
+  will-change: transform;
+}
+.ostrich-track.is-running {
+  animation: ostrich-gallop 12s linear 0s infinite;
+}
+@keyframes ostrich-gallop {
+  0%   { transform: translateX(110vw); }
+  100% { transform: translateX(-100%); }
+}
+.ostrich-frame {
+  display: inline-block;
+  font-family: var(--font-mono, "Space Mono"), ui-monospace, monospace;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ascii-catapult-shot,
+  .ostrich-track.is-running {
+    animation: none !important;
+  }
+  .ascii-catapult-shot {
+    display: none;
+  }
+}
+
 /* Brutalist field input — sharp underline only */
 .field {
   width: 100%;

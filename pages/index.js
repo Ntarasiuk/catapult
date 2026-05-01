@@ -1,4 +1,4 @@
-import AsciiField from "components/AsciiField";
+import AsciiJoust from "components/AsciiJoust";
 import Container from "components/Container";
 import Magnetic from "components/Magnetic";
 import Subscribe from "components/Subscribe";
@@ -33,23 +33,19 @@ function Hero() {
       id="top"
       className="relative px-5 md:px-10 max-w-[1440px] mx-auto pt-10 md:pt-16 pb-20 md:pb-32 overflow-hidden"
     >
-      {/* Ambient ASCII field — brand watermark, faded, behind everything */}
+      {/* Ambient playable Joust — full-vw, behind the hero text. Click into
+          the canvas to take control; otherwise it runs in ambient (immortal-
+          player) mode as living brand decoration. */}
       <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-[0.22] mix-blend-multiply animate-fade"
-        style={{ animationDelay: "0.1s", animationDuration: "1.8s" }}
+        className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-screen mix-blend-multiply opacity-90 animate-fade"
+        style={{ animationDelay: "0.05s", animationDuration: "1.4s" }}
       >
-        <AsciiField
-          text="CATAPULT"
-          haloRadius={14}
-          disruptionRate={3}
-          className="w-full h-full"
-        />
+        <AsciiJoust />
       </div>
 
       {/* Eyebrow */}
       <div
-        className="relative flex items-center justify-between gap-6 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted animate-fade"
+        className="relative flex items-center justify-between gap-6 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted animate-fade pointer-events-none"
         style={{ animationDelay: "0.05s" }}
       >
         <span className="flex items-center gap-3 font-bold">
@@ -69,7 +65,7 @@ function Hero() {
       {/* Headline — no entrance animation: this is the LCP element, so we
           let it paint instantly. The surrounding eyebrow/sub/CTAs still
           stagger in with `animate-rise`/`animate-fade`. */}
-      <h1 className="relative font-display font-black tracking-ultratight leading-[0.85] text-ink uppercase">
+      <h1 className="relative font-display font-black tracking-ultratight leading-[0.85] text-ink uppercase pointer-events-none">
         <span className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
           SITES THAT
         </span>
@@ -85,7 +81,7 @@ function Hero() {
       </h1>
 
       {/* Sub */}
-      <div className="grid md:grid-cols-12 gap-6 md:gap-12 mt-12 md:mt-20">
+      <div className="grid md:grid-cols-12 gap-6 md:gap-12 mt-12 md:mt-20 pointer-events-none">
         <p
           className="md:col-start-7 md:col-span-6 text-base md:text-xl leading-relaxed text-ink font-mono max-w-2xl animate-rise"
           style={{ animationDelay: "0.95s" }}
@@ -117,7 +113,7 @@ function Hero() {
       </div>
 
       {/* Bottom strip with stats */}
-      <div className="mt-20 md:mt-28 grid grid-cols-2 md:grid-cols-4 gap-px bg-ink border-2 border-ink">
+      <div className="mt-20 md:mt-28 grid grid-cols-2 md:grid-cols-4 gap-px bg-ink border-2 border-ink pointer-events-none">
         {[
           ["03", "Practices"],
           ["100%", "Custom"],
@@ -177,6 +173,7 @@ function Marquee() {
     </section>
   );
 }
+
 
 /* ---------- Services ---------- */
 

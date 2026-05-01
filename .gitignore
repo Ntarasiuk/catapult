@@ -31,3 +31,11 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# Python tooling caches (RE scripts in /scripts)
+__pycache__/
+*.pyc
+
+# Generated NES disassembly — regenerable from ROM via scripts/nes-disasm.py
+scripts/Joust.asm
+
