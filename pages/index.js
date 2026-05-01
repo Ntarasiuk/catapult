@@ -334,7 +334,42 @@ function WorkCard() {
         </div>
       </a>
 
-      <div className="grid md:grid-cols-12 gap-px bg-ink">
+      {/* LIGHTHOUSE PROOF BAND — verified Google Lighthouse mobile scores */}
+      <div className="border-t-2 border-ink">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-ink">
+          {[
+            ["99", "Performance"],
+            ["100", "Accessibility"],
+            ["100", "Best Practices"],
+            ["100", "SEO"],
+          ].map(([n, label]) => (
+            <div key={label} className="bg-bone p-5 md:p-6">
+              <div className="font-display font-black text-5xl md:text-6xl leading-none tracking-ultratight text-ink">
+                {n}
+              </div>
+              <div className="mt-3 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-ink-muted font-bold">
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="border-t-2 border-ink bg-bone-soft px-5 md:px-7 lg:px-10 py-4 flex items-center justify-between gap-4">
+          <span className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.22em] font-bold text-ink-muted">
+            {"// "}google lighthouse — mobile, throttled
+          </span>
+          <a
+            href="/static/images/perfect-score.webp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.22em] font-bold text-ink hover:text-acid-deep transition-colors"
+          >
+            <span>View report</span>
+            <span aria-hidden>↗</span>
+          </a>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-12 gap-px bg-ink border-t-2 border-ink">
       {/* LEFT — project meta */}
       <article className="bg-bone p-7 md:p-10 lg:p-12 md:col-span-7 flex flex-col">
         <div className="flex items-baseline justify-between font-mono text-[11px] uppercase tracking-[0.22em] font-bold text-ink-muted">
@@ -363,10 +398,10 @@ function WorkCard() {
         <p className="mt-7 text-sm md:text-base leading-relaxed font-mono max-w-md text-ink">
           <span className="text-ink-muted">[ &gt; ]</span> A new marketing site
           engineered for both humans and agents. Custom build, technical SEO,
-          and agent-ready content architecture — shipped to a perfect
-          {" "}
-          <span className="bg-acid px-1.5 font-bold">100 / Level 5</span>
-          {" "}
+          and agent-ready content architecture — shipped at{" "}
+          <span className="bg-acid px-1.5 font-bold">99 / 100 / 100 / 100</span>{" "}
+          on Google Lighthouse and a perfect{" "}
+          <span className="bg-acid px-1.5 font-bold">100 / Level 5</span>{" "}
           on isagentready.com.
         </p>
 
