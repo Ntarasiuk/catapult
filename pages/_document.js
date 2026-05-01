@@ -1,6 +1,6 @@
 import { Head, Html, Main, NextScript } from "next/document";
 
-const GA_TRACKING_ID = "G-QZK2D7ZVWJ";
+const GA_TRACKING_ID = "G-QSMP2FV3Y5";
 
 const orgSchema = {
   "@context": "https://schema.org",
