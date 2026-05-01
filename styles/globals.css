@@ -178,20 +178,24 @@ body::after {
   max-width: 100%;
 }
 .joust-game-screen {
+  /* Transparent overlay sized to the viewport. Cells are 1/192 vw × 1/64 vh. */
   font-family: var(--font-mono, "Space Mono"), ui-monospace, monospace;
-  /* 160-col grid; sized so the whole game spans roughly viewport width */
-  font-size: clamp(6px, 0.95vw, 14px);
-  letter-spacing: 0;
-  line-height: 1;
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  font-size: calc(100vh / 64);
+  line-height: calc(100vh / 64);
+  letter-spacing: calc((100vw / 192) - (100vh / 64) * 0.6);
   background: transparent;
-  cursor: text;
+  cursor: pointer;
   white-space: pre;
-  display: block;
   color: var(--ink);
+  overflow: hidden;
 }
 .joust-game-screen:focus {
-  background: rgba(204, 255, 2, 0.04);
-  outline: none;
+  outline: 2px solid var(--acid);
+  outline-offset: -2px;
 }
 
 /* Color palette for the ASCII game — chosen to read on the bone background
@@ -205,6 +209,7 @@ body::after {
 .c-hud     { color: #080808; font-weight: 700; }
 .c-accent  { color: #A6CC02; font-weight: 700; }   /* brand acid-deep */
 .c-puff    { color: #999; }      /* death poof — desaturated */
+.c-knight  { color: #6F2E1B; }   /* rider — warm rust, same on player + enemy */
 .joust-game-screen:focus {
   background: rgba(204, 255, 2, 0.05);
 }

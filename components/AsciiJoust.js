@@ -12,9 +12,9 @@ import SPRITES from "components/joust-sprites.json";
 const SPRITE_GRIDS = Object.fromEntries(
   Object.entries(SPRITES).map(([k, s]) => [k, s.split("\n").map((r) => r.split(""))])
 );
-const SPRITE_W = SPRITE_GRIDS.player_fly_right[0].length;
-const PLAYER_H = SPRITE_GRIDS.player_fly_right.length;        // 6
-const BUZZARD_H = SPRITE_GRIDS.buzzard_fly_a_right.length;    // 4
+const SPRITE_W = SPRITE_GRIDS.player_fly_right[0].length;       // 12
+const PLAYER_H = SPRITE_GRIDS.player_fly_right.length;          // 9
+const BUZZARD_H = SPRITE_GRIDS.buzzard_fly_a_right.length;      // 8 (incl. legs)
 
 // Color codes (ints for fast equality compare). Mapped to CSS classes below.
 const C_DEFAULT = 0;
@@ -27,6 +27,7 @@ const C_ROCK_DK = 6;
 const C_HUD     = 7;
 const C_ACCENT  = 8;
 const C_PUFF    = 9;
+const C_KNIGHT  = 10;  // the rider — same color regardless of player/enemy
 // Class names — index matches the constants above. Index 0 (default) emits no span.
 const COLOR_CLASSES = [
   "",        // C_DEFAULT
@@ -39,37 +40,26 @@ const COLOR_CLASSES = [
   "c-hud",
   "c-accent",
   "c-puff",
+  "c-knight",
 ];
 
-const COLS = 160;
-const ROWS = 48;
-const HUD_ROWS = 1;
+// How many top rows of a 9-row sprite are the rider (vs the creature body).
+const KNIGHT_ROWS = 3;
 
-const FLOOR_Y = 38;
+const COLS = 192;
+const ROWS = 64;
+const HUD_ROWS = 1;
 const BOTTOM_ROW = ROWS - 1;
 
-// Layout extracted from Joust.nes nametable at frame 900 (gameplay).
-// Each NES col → 5 grid cells; each NES row → 1.6 grid cells.
-const PLATFORMS = [
-  // Top tier (NES nametable row 9-10)
-  { x: 0,    y: 14, w: 25 },   // top-left  — rows 9, cols 0-4
-  { x: 45,   y: 16, w: 35 },   // top-center — row 10, cols 9-15
-  { x: 135,  y: 14, w: 25 },   // top-right — row 9, cols 28-31
-  // Mid tier (rows 15-16)
-  { x: 0,    y: 26, w: 30 },   // mid-left  — row 16, cols 0-5
-  { x: 115,  y: 24, w: 45 },   // mid-right — rows 15-16, cols 23-31
-  // Mid-center (row 18)
-  { x: 55,   y: 29, w: 35 },   // mid-center — row 18, cols 11-17
-  // Continuous floor (no lava well — lava rises from below over waves)
-  { x: 0,    y: FLOOR_Y, w: COLS },
-];
+// Platforms are now LIVE-MEASURED from the page DOM (data-game-platform).
+// `dynamicPlatforms` is updated by the usePlatforms hook each scroll/resize.
+let dynamicPlatforms = [];
+function setDynamicPlatforms(p) { dynamicPlatforms = p; }
 
-// Lava rises from below the floor over waves.
-// Waves 1-2: hidden (off-screen below grid).
-// Waves 3+: rises 1 cell per wave starting at the bottom row.
+// Lava rises from below over waves (covers entire viewport bottom).
 function lavaTopRow(wave) {
-  if (wave <= 2) return BOTTOM_ROW + 2; // off-screen, fully hidden
-  const visible = wave - 2;             // wave 3 → 1 row visible at bottom
+  if (wave <= 2) return BOTTOM_ROW + 2; // off-screen, hidden
+  const visible = wave - 2;
   return BOTTOM_ROW - visible + 1;
 }
 
@@ -79,11 +69,13 @@ function lavaTopRow(wave) {
 //     repeated FLAP_IMPULSE = -0.75 every ~14 frames, average rise ≈ 0.10/f.
 //   - Horizontal max ≈ 1.5 NES px/f → ~0.95 cells/f (xscale = 0.625).
 //   - Floor / platform Y values match nametable-extracted layout.
-const GRAVITY = 0.045;
-const MAX_FALL = 0.70;
-const FLAP_IMPULSE = -0.78;
-const ACCEL = 0.085;
-const MAX_VX = 1.15;
+// Physics — scaled to the 192x64 grid so vertical/horizontal speeds *visually*
+// match the previous 160x48 grid (cells per frame × cells per viewport unit).
+const GRAVITY = 0.060;
+const MAX_FALL = 0.93;
+const FLAP_IMPULSE = -1.04;
+const ACCEL = 0.102;
+const MAX_VX = 1.38;
 const FRICTION_GROUND = 0.86;
 const FRICTION_AIR = 0.995;
 const RESPAWN_FRAMES = 90;
@@ -116,18 +108,25 @@ function makeEntity(x, y, isPlayer, facing) {
     alive: true,
     deathFrames: 0,
     invulnFrames: isPlayer ? RESPAWN_INVULN_FRAMES : 0,
-    h: isPlayer ? PLAYER_H : BUZZARD_H,
+    flapAnimFrames: 0, // counts down after each flap impulse — drives wing animation
+    // Same body for player + enemies — just palette differs (matches arcade Joust)
+    h: PLAYER_H,
     w: SPRITE_W,
   };
 }
 
+// Frames between game start (or wave clear) and the first enemy spawning.
+// Gives the player a beat to orient.
+const FIRST_WAVE_DELAY = 180;     // ~3 seconds at 60Hz
+const NEXT_WAVE_DELAY  = 90;      // ~1.5 seconds — between waves
+
 function createGameState() {
   return {
-    entities: [makeEntity(8, FLOOR_Y - 9, true, 1)],
+    entities: [makeEntity(8, 4, true, 1)], // placeholder — start() repositions onto the marquee
     score: 0,
     lives: 3,
     wave: 1,
-    pendingWave: 0, // frames until next wave spawn
+    pendingWave: FIRST_WAVE_DELAY, // first wave spawns after this many frames
     pendingRespawn: 0,
     gameOver: false,
     started: false,
@@ -165,13 +164,12 @@ function dxWrap(a, b) {
 }
 
 function platformAt(x, fromY, wave) {
-  // Returns y of the highest platform top that is at-or-below `fromY` in column x.
-  // (i.e., the platform you'd land on if you were falling from fromY.)
-  // Skips platforms submerged in risen lava — they're no longer safe to stand on.
+  // Highest platform top at-or-below `fromY` in column x. Reads live-measured
+  // page DOM platforms (`dynamicPlatforms`), skipping ones covered by lava.
   const cx = Math.floor(x);
   const lavaTop = lavaTopRow(wave);
   let best = null;
-  for (const p of PLATFORMS) {
+  for (const p of dynamicPlatforms) {
     if (p.y >= lavaTop) continue; // submerged
     if (cx >= p.x && cx < p.x + p.w && p.y >= fromY - 0.001) {
       if (best === null || p.y < best) best = p.y;
@@ -181,7 +179,54 @@ function platformAt(x, fromY, wave) {
 }
 
 function inLava(x, y, wave) {
+  // Fell off the bottom of the visible world — always lethal regardless of wave
+  if (y > BOTTOM_ROW + 3) return true;
   return y >= lavaTopRow(wave);
+}
+
+// Live-platform measurement: scans DOM for [data-game-platform] elements
+// and converts their bounding rects to game-grid coordinates. Throttled to
+// requestAnimationFrame on scroll/resize so we don't burn the main thread.
+function usePlatformsFromDOM() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let rafId = null;
+    function measure() {
+      rafId = null;
+      const els = document.querySelectorAll("[data-game-platform]");
+      const cellW = window.innerWidth / COLS;
+      const cellH = window.innerHeight / ROWS;
+      const out = [];
+      for (const el of els) {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > window.innerHeight) continue; // off-screen
+        if (r.width <= 0 || r.height <= 0) continue;
+        const x = r.left / cellW;
+        const y = r.top / cellH;
+        const w = r.width / cellW;
+        out.push({ x, y, w });
+      }
+      setDynamicPlatforms(out);
+    }
+    function schedule() {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(measure);
+    }
+    measure();
+    // Re-measure on scroll + resize. NO MutationObserver — the game's own
+    // innerHTML mutations would trigger it and create a feedback loop.
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    // Slow tick to catch CSS-animated platforms (the marquee scrolls via
+    // transform, which doesn't fire scroll/resize events).
+    const interval = setInterval(schedule, 200);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      clearInterval(interval);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
 }
 
 function updateEntity(e, state) {
@@ -190,6 +235,7 @@ function updateEntity(e, state) {
     return;
   }
   if (e.invulnFrames > 0) e.invulnFrames--;
+  if (e.flapAnimFrames > 0) e.flapAnimFrames--;
 
   // ---- Input / AI ----
   let xInput = false;
@@ -199,23 +245,37 @@ function updateEntity(e, state) {
     while (state.flapQueued > 0) {
       e.vy = FLAP_IMPULSE;
       e.grounded = false;
+      e.flapAnimFrames = 10; // ~165 ms at 60Hz — visible "wing-beat" lift
       state.flapQueued--;
     }
   } else {
-    // Simple AI: chase player, try to be slightly higher
+    // Simple AI: chase player. Only flaps when airborne (otherwise it's
+    // standing on a platform — flapping wings while perched looks wrong).
     const player = state.entities[0];
     if (player && player.alive) {
       const dx = dxWrap(player.x, e.x);
-      if (dx > 0.5) { e.vx += ACCEL * 0.6; e.facing = 1; xInput = true; }
-      else if (dx < -0.5) { e.vx -= ACCEL * 0.6; e.facing = -1; xInput = true; }
-      // Flap occasionally to climb above player
-      const wantHigher = e.y > player.y - 1.5;
-      if (wantHigher && Math.random() < 0.04) {
-        e.vy = FLAP_IMPULSE * 0.8;
-        e.grounded = false;
-      } else if (Math.random() < 0.008) {
-        e.vy = FLAP_IMPULSE * 0.65;
-        e.grounded = false;
+      if (dx > 0.5) { e.vx += ACCEL * 0.3; e.facing = 1; xInput = true; }
+      else if (dx < -0.5) { e.vx -= ACCEL * 0.3; e.facing = -1; xInput = true; }
+      const enemyMaxVx = MAX_VX * 0.55;
+      if (e.vx >  enemyMaxVx) e.vx =  enemyMaxVx;
+      if (e.vx < -enemyMaxVx) e.vx = -enemyMaxVx;
+
+      if (e.grounded) {
+        // Take off occasionally — the only way to leave a platform
+        if (Math.random() < 0.012) {
+          e.vy = FLAP_IMPULSE * 0.85;
+          e.grounded = false;
+          e.flapAnimFrames = 10;
+        }
+      } else {
+        const wantHigher = e.y > player.y - 1.5;
+        if (wantHigher && Math.random() < 0.018) {
+          e.vy = FLAP_IMPULSE * 0.7;
+          e.flapAnimFrames = 10;
+        } else if (Math.random() < 0.004) {
+          e.vy = FLAP_IMPULSE * 0.55;
+          e.flapAnimFrames = 10;
+        }
       }
     }
   }
@@ -325,15 +385,44 @@ function maybeAdvanceWave(state) {
   const enemiesAlive = state.entities.some((e) => !e.isPlayer && e.alive);
   if (enemiesAlive) return;
   if (state.pendingWave === 0) {
-    state.pendingWave = 90;
+    state.pendingWave = NEXT_WAVE_DELAY;
   } else {
     state.pendingWave--;
     if (state.pendingWave === 0) {
       state.entities = state.entities.filter((e) => e.isPlayer || e.alive);
-      state.wave++;
+      // Don't increment wave on the very first spawn (waves start at 1)
+      if (state.wave === 1 && !state.firstWaveSpawned) {
+        state.firstWaveSpawned = true;
+      } else {
+        state.wave++;
+      }
       spawnWave(state);
     }
   }
+}
+
+// Find the widest DOM-derived platform — that's the marquee. Used as the
+// player spawn pad so they appear standing on the page's most prominent
+// horizontal element, like the floor in arcade Joust.
+function findSpawnPlatform() {
+  let best = null;
+  for (const p of dynamicPlatforms) {
+    if (p.w > COLS * 0.5 && (!best || p.w > best.w)) best = p;
+  }
+  return best;
+}
+
+function placePlayerOnSpawnPlatform(player) {
+  const spawn = findSpawnPlatform();
+  if (!spawn) return false;
+  player.x = spawn.x + spawn.w / 2 - player.w / 2;
+  player.y = spawn.y - player.h;
+  player.vx = 0;
+  player.vy = 0;
+  player.facing = 1;
+  player.grounded = true;
+  player.invulnFrames = 90;
+  return true;
 }
 
 function maybeRespawnPlayer(state) {
@@ -344,12 +433,15 @@ function maybeRespawnPlayer(state) {
       state.pendingRespawn--;
       if (state.pendingRespawn === 0) {
         player.alive = true;
-        player.x = 8;
-        player.y = FLOOR_Y - 9;
-        player.vx = 0;
-        player.vy = 0;
-        player.facing = 1;
-        player.invulnFrames = RESPAWN_INVULN_FRAMES;
+        if (!placePlayerOnSpawnPlatform(player)) {
+          // Fallback if no spawn platform available (page DOM not yet measured)
+          player.x = 8;
+          player.y = 4;
+          player.vx = 0;
+          player.vy = 0;
+          player.facing = 1;
+          player.invulnFrames = RESPAWN_INVULN_FRAMES;
+        }
       }
     }
   }
@@ -394,35 +486,12 @@ function renderFrame(state) {
       const t = (state.frame + x * 5 + y * 3) % 11;
       const c = t < 4 ? "~" : t < 7 ? "=" : t < 9 ? "^" : ".";
       grid[gy][x] = c;
-      // Brighter top edge of the lava reads as molten / glowing
       colors[gy][x] = (y === lavaTop || t >= 9) ? C_LAVA_HI : C_LAVA;
     }
   }
 
-  // Platforms (skip cells eaten by risen lava)
-  for (const p of PLATFORMS) {
-    if (p.y >= lavaTop) continue;
-    for (let x = p.x; x < p.x + p.w; x++) {
-      if (x < 0 || x >= COLS) continue;
-      const gy = p.y + yOff;
-      if (gy < grid.length) {
-        grid[gy][x] = "=";
-        colors[gy][x] = C_ROCK;
-      }
-    }
-    for (let yShade = 1; yShade <= 3; yShade++) {
-      const gy = p.y + yOff + yShade;
-      if (gy >= grid.length) break;
-      if (p.y + yShade >= lavaTop) break;
-      for (let x = p.x; x < p.x + p.w; x++) {
-        if (x < 0 || x >= COLS) continue;
-        if (grid[gy][x] === " ") {
-          grid[gy][x] = yShade === 1 ? "-" : yShade === 2 ? "." : " ";
-          colors[gy][x] = C_ROCK_DK;
-        }
-      }
-    }
-  }
+  // No platform drawing — the page IS the world. Each [data-game-platform]
+  // element shows through the transparent overlay; sprites land on top.
 
   // Entities
   for (const e of state.entities) {
@@ -496,39 +565,43 @@ function buildHTML(grid, colors) {
 
 function drawSprite(grid, colors, e, yOff, frame) {
   const cx = Math.round(e.x);
-  const cy = Math.round(e.y) + yOff;
+  let cy = Math.round(e.y) + yOff;
   const dir = e.facing === 1 ? "_right" : "_left";
 
+  // Both player and enemies use the same shape (knight on creature) —
+  // distinguished only by color (palette swap), like arcade Joust.
   let name;
-  if (e.isPlayer) {
-    if (e.grounded) {
-      const moving = Math.abs(e.vx) > 0.05;
-      name = moving && Math.floor(frame / 6) % 2 === 0 ? "player_stand_b" : "player_stand_a";
-    } else {
-      name = "player_fly";
-    }
+  if (e.grounded) {
+    const moving = Math.abs(e.vx) > 0.05;
+    name = moving && Math.floor(frame / 6) % 2 === 0 ? "player_stand_b" : "player_stand_a";
   } else {
-    name = Math.floor(frame / 5) % 2 === 0 ? "buzzard_fly_a" : "buzzard_fly_b";
+    name = "player_fly";
+    // Visible "wing-beat" lift any time the character is rising. Driven by
+    // velocity (not a discrete flap counter) so it reads continuously while
+    // the player taps J or while the AI sustains altitude.
+    if (e.vy < -0.1) cy -= 2;
   }
 
   const sprite = SPRITE_GRIDS[name + dir];
   if (!sprite) return;
-  const colorCode = e.isPlayer ? C_PLAYER : C_ENEMY;
+  const bodyColor = e.isPlayer ? C_PLAYER : C_ENEMY;
   for (let r = 0; r < sprite.length; r++) {
     const row = sprite[r];
     const gy = cy + r;
     if (gy < 0 || gy >= grid.length) continue;
+    // Top rows = rider/knight (shared brown), rest = bird body (player/enemy color)
+    const rowColor = r < KNIGHT_ROWS ? C_KNIGHT : bodyColor;
     for (let c = 0; c < row.length; c++) {
       const ch = row[c];
       if (ch === " ") continue; // transparent
       const gx = wrapX(cx + c);
       grid[gy][gx] = ch;
-      colors[gy][gx] = colorCode;
+      colors[gy][gx] = rowColor;
     }
   }
 }
 
-export default function AsciiJoust() {
+export default function AsciiJoust({ startActive = false }) {
   const preRef = useRef(null);
   const stateRef = useRef(null);
   const rafRef = useRef(null);
@@ -538,20 +611,34 @@ export default function AsciiJoust() {
   // Initialize state once
   if (stateRef.current === null) {
     stateRef.current = createGameState();
+    if (startActive) stateRef.current.ambient = false;
   }
 
   const start = useCallback(() => {
     const s = stateRef.current;
     Object.assign(s, createGameState());
     s.started = true;
-    spawnWave(s);
+    if (startActive) s.ambient = false; // marquee-triggered: skip ambient demo
     setHudTick((n) => n + 1);
-  }, []);
+    // Defer spawn placement to next frame so usePlatformsFromDOM has
+    // populated dynamicPlatforms first. (Hooks may run before our measure.)
+    requestAnimationFrame(() => {
+      placePlayerOnSpawnPlatform(s.entities[0]);
+    });
+  }, [startActive]);
 
-  // Auto-start the game on mount so it acts as an ambient hero background.
+  // Live-measure platforms from the page DOM (every [data-game-platform]).
+  // Declared BEFORE auto-start so the platforms hook's useEffect runs first
+  // and dynamicPlatforms is populated before start() positions the player.
+  usePlatformsFromDOM();
+
+  // Auto-start the game on mount.
   useEffect(() => {
     if (!stateRef.current.started) start();
-  }, [start]);
+    if (startActive && preRef.current) {
+      preRef.current.focus();
+    }
+  }, [start, startActive]);
 
   // Game loop — fixed-step physics @ 60Hz, RAF render rate matches monitor
   useEffect(() => {
@@ -639,7 +726,7 @@ export default function AsciiJoust() {
   }, [focused, start]);
 
   return (
-    <div className="joust-game-wrap absolute inset-0 flex items-center justify-center select-none">
+    <div className="joust-game-wrap fixed inset-0 z-30 pointer-events-none select-none overflow-hidden">
       <pre
         ref={preRef}
         tabIndex={0}
@@ -647,17 +734,16 @@ export default function AsciiJoust() {
           setFocused(true);
           const s = stateRef.current;
           if (s) {
-            // Leaving ambient: enemies & lava become deadly.
             s.ambient = false;
             if (!s.started || s.gameOver) start();
           }
         }}
         onBlur={() => setFocused(false)}
         onClick={() => preRef.current?.focus()}
-        className={`joust-game-screen m-0 leading-none whitespace-pre text-ink outline-none transition-opacity duration-300 ${
-          focused ? "opacity-100" : "opacity-40"
+        className={`joust-game-screen pointer-events-auto m-0 leading-none whitespace-pre outline-none transition-opacity duration-300 ${
+          focused ? "opacity-100" : "opacity-70"
         }`}
-        aria-label="Background ASCII Joust — click to play"
+        aria-label="ASCII Joust over the page — click to play"
         role="application"
       />
     </div>

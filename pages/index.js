@@ -1,3 +1,5 @@
+import { useState } from "react";
+import AsciiField from "components/AsciiField";
 import AsciiJoust from "components/AsciiJoust";
 import Container from "components/Container";
 import Magnetic from "components/Magnetic";
@@ -12,10 +14,14 @@ function spotlight(e) {
 }
 
 export default function Home() {
+  const [gameActive, setGameActive] = useState(false);
   return (
     <Container>
+      {/* Game only mounts after the user clicks the marquee; until then,
+          the hero shows the AsciiField "CATAPULT" watermark. */}
+      {gameActive && <AsciiJoust startActive />}
       <Hero />
-      <Marquee />
+      <Marquee onActivate={() => setGameActive(true)} />
       <Services />
       <Work />
       <Manifesto />
@@ -33,14 +39,19 @@ function Hero() {
       id="top"
       className="relative px-5 md:px-10 max-w-[1440px] mx-auto pt-10 md:pt-16 pb-20 md:pb-32 overflow-hidden"
     >
-      {/* Ambient playable Joust — full-vw, behind the hero text. Click into
-          the canvas to take control; otherwise it runs in ambient (immortal-
-          player) mode as living brand decoration. */}
+      {/* Ambient ASCII watermark — passive brand decoration, replaced by the
+          playable game once the user clicks the marquee strip. */}
       <div
-        className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-screen mix-blend-multiply opacity-90 animate-fade"
-        style={{ animationDelay: "0.05s", animationDuration: "1.4s" }}
+        aria-hidden
+        className="absolute inset-0 pointer-events-none opacity-[0.22] mix-blend-multiply animate-fade"
+        style={{ animationDelay: "0.1s", animationDuration: "1.8s" }}
       >
-        <AsciiJoust />
+        <AsciiField
+          text="CATAPULT"
+          haloRadius={14}
+          disruptionRate={3}
+          className="w-full h-full"
+        />
       </div>
 
       {/* Eyebrow */}
@@ -66,16 +77,16 @@ function Hero() {
           let it paint instantly. The surrounding eyebrow/sub/CTAs still
           stagger in with `animate-rise`/`animate-fade`. */}
       <h1 className="relative font-display font-black tracking-ultratight leading-[0.85] text-ink uppercase pointer-events-none">
-        <span className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
+        <span data-game-platform className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
           SITES THAT
         </span>
         <span className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
-          <span className="bg-ink text-acid px-3 md:px-5 inline-block">
+          <span data-game-platform className="bg-ink text-acid px-3 md:px-5 inline-block">
             RANK.
           </span>{" "}
-          AI
+          <span data-game-platform>AI</span>
         </span>
-        <span className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
+        <span data-game-platform className="block text-[18vw] md:text-[14vw] lg:text-[12.5rem]">
           THAT SHIPS.
         </span>
       </h1>
@@ -100,13 +111,13 @@ function Hero() {
         style={{ animationDelay: "1.15s" }}
       >
         <Magnetic strength={0.32} radius={140}>
-          <a href="#contact" className="btn-acid">
+          <a href="#contact" data-game-platform className="btn-acid">
             <span className="w-2 h-2 bg-ink block" aria-hidden />
             <span>Start a project</span>
             <span aria-hidden>→</span>
           </a>
         </Magnetic>
-        <a href="#services" className="brutal-link inline-flex items-center gap-2 text-ink">
+        <a href="#services" data-game-platform className="brutal-link inline-flex items-center gap-2 text-ink">
           <span>See services</span>
           <span aria-hidden>↓</span>
         </a>
@@ -120,7 +131,7 @@ function Hero() {
           ["2-12wk", "Engagements"],
           ["∞", "Compounding"],
         ].map(([n, label]) => (
-          <div key={label} className="bg-bone p-5 md:p-6">
+          <div key={label} data-game-platform className="bg-bone p-5 md:p-6">
             <div className="font-display font-black text-5xl md:text-6xl leading-none tracking-ultratight text-ink">
               {n}
             </div>
@@ -136,7 +147,7 @@ function Hero() {
 
 /* ---------- Marquee strip ---------- */
 
-function Marquee() {
+function Marquee({ onActivate }) {
   const items = [
     "MARKETING SITES",
     "WEB APPS",
@@ -153,9 +164,13 @@ function Marquee() {
   ];
   const doubled = [...items, ...items];
   return (
-    <section
-      aria-hidden
-      className="relative bg-acid border-y-2 border-ink overflow-hidden"
+    <button
+      type="button"
+      onClick={onActivate}
+      data-game-platform
+      aria-label="Click to play Joust on this page"
+      title="Click to play Joust"
+      className="group relative block w-full bg-acid border-y-2 border-ink overflow-hidden cursor-pointer text-left"
     >
       <div className="marquee-track animate-marquee py-4 md:py-5 text-ink">
         {doubled.map((item, i) => (
@@ -170,7 +185,12 @@ function Marquee() {
           </span>
         ))}
       </div>
-    </section>
+      {/* Play hint — pulses softly to suggest interactivity */}
+      <span className="pointer-events-none absolute right-3 md:right-5 top-1/2 -translate-y-1/2 z-10 inline-flex items-center gap-2 px-2.5 py-1 bg-ink text-acid font-mono text-[10px] md:text-[11px] uppercase tracking-[0.22em] font-bold animate-pulse">
+        <span className="w-1.5 h-1.5 bg-acid block" aria-hidden />
+        click to play joust
+      </span>
+    </button>
   );
 }
 
@@ -240,6 +260,7 @@ function ServiceCard({ service, index }) {
     <article
       ref={ref}
       onMouseMove={spotlight}
+      data-game-platform
       className={`flip-card reveal-up ${
         visible ? "is-visible" : ""
       } p-7 md:p-9 lg:p-10 flex flex-col h-full`}
@@ -294,6 +315,7 @@ function WorkCard() {
   return (
     <div
       ref={ref}
+      data-game-platform
       className={`reveal-up ${
         visible ? "is-visible" : ""
       } mt-14 md:mt-20 border-2 border-ink bg-ink`}
@@ -568,6 +590,7 @@ function Principle({ p, index }) {
     <div
       ref={ref}
       onMouseMove={spotlight}
+      data-game-platform
       className={`flip-card reveal-up ${
         visible ? "is-visible" : ""
       } p-7 md:p-10 lg:p-12 relative`}
@@ -625,7 +648,7 @@ function Contact() {
             </ContactRow>
           </dl>
         </div>
-        <div className="md:col-span-7 border-2 border-ink bg-bone p-6 md:p-10">
+        <div data-game-platform className="md:col-span-7 border-2 border-ink bg-bone p-6 md:p-10">
           <Subscribe />
         </div>
       </div>
