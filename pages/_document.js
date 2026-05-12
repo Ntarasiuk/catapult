@@ -7,33 +7,38 @@ const orgSchema = {
   "@type": "ProfessionalService",
   "@id": "https://devcatapult.com/#organization",
   name: "Catapult",
-  alternateName: "Catapult Studio",
   description:
-    "Independent studio for websites, SEO, and AI consulting. We build the systems behind modern brands.",
+    "Catapult builds a custom intelligence layer for each portfolio company a private-equity firm acquires. From day one of ownership the operating partner can query the company in natural language; by exit the portco is AI-native.",
   url: "https://devcatapult.com",
   image: "https://devcatapult.com/static/og.png",
-  slogan: "Sites that rank. AI that ships.",
+  slogan: "Built for the hold period.",
   serviceType: [
-    "Web Design",
-    "Web Development",
-    "Search Engine Optimization",
-    "AI Consulting",
+    "Operational Intelligence",
+    "Knowledge Graph Construction",
+    "Investigation Tooling",
+    "AI Implementation",
+    "Value-Creation Reporting",
   ],
-  areaServed: "Worldwide",
+  areaServed: "United States",
   brand: { "@type": "Brand", name: "Catapult" },
   knowsAbout: [
-    "Website design",
-    "Programmatic SEO",
-    "AI search optimization",
-    "LLM applications",
-    "Conversion optimization",
+    "Hold-period intelligence",
+    "Private equity value creation",
+    "Knowledge graph construction",
+    "Retrieval-augmented generation",
+    "Investigation tooling",
+    "Portfolio company operations",
+    "Industrial services",
+    "Mechanical contracting",
+    "HVAC operations",
+    "Construction services",
   ],
   contactPoint: {
     "@type": "ContactPoint",
     email: "hello@devcatapult.com",
-    contactType: "customer support",
+    contactType: "sales",
     availableLanguage: ["English"],
-    areaServed: "Worldwide",
+    areaServed: "United States",
   },
   sameAs: [],
 };
@@ -45,7 +50,7 @@ const siteSchema = {
   name: "Catapult",
   url: "https://devcatapult.com",
   description:
-    "Independent studio for websites, SEO, and AI consulting.",
+    "The intelligence layer for private-equity portfolio companies.",
   publisher: { "@id": "https://devcatapult.com/#organization" },
   inLanguage: "en-US",
 };
@@ -76,12 +81,12 @@ export default function Document() {
           type="image/png"
         />
         <link
-          color="#CCFF02"
+          color="#6F1D2C"
           href="/static/favicons/safari-pinned-tab.svg"
           rel="mask-icon"
         />
-        <meta content="#EAE6D8" name="theme-color" />
-        <meta content="#EAE6D8" name="msapplication-TileColor" />
+        <meta content="#F2ECDD" name="theme-color" />
+        <meta content="#F2ECDD" name="msapplication-TileColor" />
         <meta
           content="/static/favicons/browserconfig.xml"
           name="msapplication-config"

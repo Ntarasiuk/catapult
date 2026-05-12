@@ -4,17 +4,17 @@ import LoadingSpinner from "./LoadingSpinner";
 import SuccessMessage from "./SuccessMessage";
 
 const TYPES = [
-  { id: "Website", label: "Website" },
-  { id: "SEO", label: "SEO" },
-  { id: "AI", label: "AI" },
-  { id: "Multiple", label: "All of it" },
+  { id: "Diligence", label: "Diligence" },
+  { id: "100-Day", label: "100-Day" },
+  { id: "Continuous", label: "Continuous" },
+  { id: "Other", label: "Other" },
 ];
 
 export default function Subscribe() {
   const emailEl = useRef(null);
   const companyEl = useRef(null);
   const detailsEl = useRef(null);
-  const [type, setType] = useState("Website");
+  const [type, setType] = useState("Diligence");
   const [form, setForm] = useState({ state: "Initial" });
 
   const loading = form.state === "Loading";
@@ -48,7 +48,7 @@ export default function Subscribe() {
       detailsEl.current.value = "";
       setForm({
         state: "Success",
-        message: "Got it. We'll be in touch within two business days.",
+        message: "Received. We'll be in touch within two business days.",
       });
     } catch (err) {
       setForm({
@@ -59,41 +59,32 @@ export default function Subscribe() {
   };
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-6">
-      <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted font-bold">
-        <span>{"// "}project_brief.txt</span>
-        <span className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 bg-acid-deep block animate-pulse" aria-hidden />
-          Open
-        </span>
-      </div>
-      <span className="rule" />
-
+    <form onSubmit={submit} className="flex flex-col gap-7">
       <Field label="Email" required>
         <input
           ref={emailEl}
           type="email"
           autoComplete="email"
           required
-          placeholder="you@company.com"
+          placeholder="you@firm.com"
           className="field"
           disabled={loading}
         />
       </Field>
 
-      <Field label="Company">
+      <Field label="Firm">
         <input
           ref={companyEl}
           type="text"
           autoComplete="organization"
-          placeholder="What you're working on"
+          placeholder="Your firm or fund name"
           className="field"
           disabled={loading}
         />
       </Field>
 
       <div>
-        <Label>What do you need?</Label>
+        <Label>Engagement type</Label>
         <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
           {TYPES.map((t) => (
             <button
@@ -111,25 +102,21 @@ export default function Subscribe() {
         </div>
       </div>
 
-      <Field label="Project details">
+      <Field label="Context">
         <textarea
           ref={detailsEl}
-          rows={4}
-          placeholder="A few sentences on goals, timeline, and what you've already tried."
+          rows={5}
+          placeholder="A few sentences on the portfolio — thesis, hold period, what you'd want to see and ask first."
           className="field"
           disabled={loading}
         />
       </Field>
 
-      <div className="pt-4 flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4">
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted font-bold">
-          {"// "}Reply within 2 business days
+      <div className="pt-3 flex flex-col-reverse md:flex-row md:items-baseline md:justify-between gap-4 border-t border-[var(--rule)]">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-ink-faint">
+          Reply within two business days
         </p>
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn-acid disabled:opacity-50 disabled:hover:transform-none disabled:hover:shadow-none"
-        >
+        <button type="submit" disabled={loading} className="cta disabled:opacity-40">
           {loading ? (
             <>
               <LoadingSpinner />
@@ -137,8 +124,7 @@ export default function Subscribe() {
             </>
           ) : (
             <>
-              <span className="w-2 h-2 bg-ink block" aria-hidden />
-              <span>Send brief</span>
+              <span>Send</span>
               <span aria-hidden>→</span>
             </>
           )}
@@ -157,19 +143,26 @@ export default function Subscribe() {
 
 function Label({ children }) {
   return (
-    <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted font-bold">
+    <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-ink-faint">
       {children}
     </span>
   );
 }
 
-function Field({ label, required, children }) {
+function Field({ label, required, hint, children }) {
   return (
-    <label className="flex flex-col gap-2.5">
-      <Label>
-        {label}
-        {required && <span className="text-acid-deep">&nbsp;*</span>}
-      </Label>
+    <label className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-4">
+        <Label>
+          {label}
+          {required && <span className="text-oxblood">&nbsp;*</span>}
+        </Label>
+        {hint && (
+          <span className="italic text-[12.5px] text-ink-faint">
+            {hint}
+          </span>
+        )}
+      </div>
       {children}
     </label>
   );

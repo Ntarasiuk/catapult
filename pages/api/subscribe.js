@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   const {
     email,
-    type = "Website",
+    type = "Diligence",
     company = "",
     company_url = "",
   } = req.body || {};

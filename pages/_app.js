@@ -1,28 +1,18 @@
 import "styles/globals.css";
 import { useReportWebVitals } from "next/web-vitals";
-import { Big_Shoulders, Space_Mono } from "next/font/google";
+import { JetBrains_Mono, Wix_Madefor_Text } from "next/font/google";
 
-/* Self-host fonts via next/font: removes the render-blocking Google Fonts
-   CSS request and inlines @font-face declarations. CSS variables let
-   Tailwind + globals.css pick up the resolved family name.
-
-   Note: Google Fonts consolidated "Big Shoulders Display" into "Big Shoulders"
-   as a variable font with optical-size + weight axes. */
-const display = Big_Shoulders({
+const sans = Wix_Madefor_Text({
   subsets: ["latin"],
-  /* Codebase uses only the implicit 400 (brand wordmark) and 900 (font-black
-     headlines, marquee, principles, work). 700/800 not referenced — dropped
-     to shave font payload and improve LCP. */
-  weight: ["400", "900"],
-  variable: "--font-display",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-sans",
   display: "swap",
 });
 
-const mono = Space_Mono({
+const mono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "700"],
-  /* Italic isn't used anywhere — dropped to halve the mono font payload. */
-  style: ["normal"],
+  weight: ["400", "500"],
   variable: "--font-mono",
   display: "swap",
 });
@@ -41,7 +31,7 @@ export default function App({ Component, pageProps }) {
   });
 
   return (
-    <div className={`${display.variable} ${mono.variable} contents`}>
+    <div className={`${sans.variable} ${mono.variable} contents font-sans`}>
       <Component {...pageProps} />
     </div>
   );

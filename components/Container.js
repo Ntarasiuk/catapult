@@ -1,15 +1,15 @@
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import Cursor from "./Cursor";
 
 export default function Container(props) {
   const { children, ...customMeta } = props;
   const router = useRouter();
   const meta = {
-    title: "Catapult — Studio for websites, SEO, and AI",
+    title: "Catapult — The intelligence layer for portfolio companies",
     description:
-      "Independent studio. We build the systems behind modern brands — websites that convert, search that ranks, and AI that ships.",
+      "We build the intelligence layer for PE portfolio companies. Day one of ownership, the operating partner can see and ask anything. By exit, the portco is AI-native.",
     image: "https://devcatapult.com/static/og.png",
     type: "website",
     ...customMeta,
@@ -32,159 +32,71 @@ export default function Container(props) {
         <meta property="og:image" content={meta.image} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="Catapult — sites that rank. AI that ships." />
+        <meta property="og:image:alt" content="Catapult." />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={meta.title} />
         <meta name="twitter:description" content={meta.description} />
         <meta name="twitter:image" content={meta.image} />
-        <meta name="twitter:image:alt" content="Catapult — sites that rank. AI that ships." />
+        <meta name="twitter:image:alt" content="Catapult." />
       </Head>
       <a href="#main" className="skip-nav">
         Skip to content
       </a>
       <Cursor />
-      <SiteHeader />
-      <main id="main">{children}</main>
+      <SiteHeader currentPath={router.pathname} />
+      <main id="main" className="flex-1">{children}</main>
       <SiteFooter />
     </>
   );
 }
 
-function SiteHeader() {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
+function SiteHeader({ currentPath }) {
   return (
-    <header
-      className={`sticky top-0 z-30 transition-[background,border] duration-200 ${
-        scrolled
-          ? "bg-bone/95 backdrop-blur-sm border-b-2 border-ink"
-          : "bg-transparent border-b-2 border-transparent"
-      }`}
-    >
-      <div className="max-w-[1440px] mx-auto px-5 md:px-10 h-14 md:h-16 flex items-center justify-between">
-        <a
-          href="#top"
-          className="font-display font-black text-2xl md:text-[28px] tracking-ultratight leading-none uppercase text-ink"
+    <header className="absolute top-0 left-0 right-0 z-30">
+      <div className="max-w-[1320px] mx-auto px-8 md:px-14 lg:px-20 h-20 md:h-24 flex items-center justify-between">
+        <Link
+          href="/"
+          className="text-[24px] md:text-[26px] leading-none tracking-[-0.01em] text-ink"
         >
-          Catapult
-          <span className="text-ink-muted">/</span>
-          <span className="text-ink-muted text-sm align-top tracking-wider">
-            STUDIO
-          </span>
-        </a>
-        <nav className="flex items-center gap-2 md:gap-3">
-          <a
-            href="#services"
-            className="hidden sm:inline-flex items-center px-3 py-3 min-h-[44px] font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
-          >
-            Services
-          </a>
-          <a
-            href="#work"
-            className="hidden md:inline-flex items-center px-3 py-3 min-h-[44px] font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
-          >
-            Work
-          </a>
-          <a
-            href="#approach"
-            className="hidden md:inline-flex items-center px-3 py-3 min-h-[44px] font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink hover:bg-ink hover:text-bone transition-colors"
-          >
-            Approach
-          </a>
-          <a
-            href="#contact"
-            className="btn-ink"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-acid animate-pulse" aria-hidden />
-            <span>Start a project</span>
-          </a>
+          Catapult<span className="text-oxblood">.</span>
+        </Link>
+        <nav className="flex items-center gap-8 md:gap-12">
+          <NavLink href="/engagement" active={currentPath === "/engagement"}>
+            Engagement
+          </NavLink>
+          <NavLink href="/contact" active={currentPath === "/contact"}>
+            Contact
+          </NavLink>
         </nav>
       </div>
     </header>
   );
 }
 
+function NavLink({ href, children, active }) {
+  return (
+    <Link
+      href={href}
+      className={`text-[15px] md:text-[16px] leading-none transition-colors ${
+        active ? "text-oxblood italic" : "text-ink hover:text-oxblood"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}
+
 function SiteFooter() {
   return (
-    <footer className="border-t-2 border-ink mt-32 md:mt-40 bg-bone">
-      <div className="max-w-[1440px] mx-auto px-5 md:px-10 py-12 md:py-16">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-10">
-          <div>
-            <div className="font-display font-black text-5xl md:text-7xl tracking-ultratight leading-none uppercase text-ink">
-              Catapult
-              <span className="text-acid-deep">*</span>
-            </div>
-            <div className="mt-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted">
-              [ Studio for websites, SEO &amp; AI ]
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-6 font-mono text-[11px] uppercase tracking-[0.16em]">
-            <div>
-              <div className="text-ink-faint">Practices</div>
-              <ul className="mt-2 text-ink font-bold">
-                <li>
-                  <a href="#services" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
-                    → Websites
-                  </a>
-                </li>
-                <li>
-                  <a href="#services" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
-                    → SEO
-                  </a>
-                </li>
-                <li>
-                  <a href="#services" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
-                    → AI
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <div className="text-ink-faint">Studio</div>
-              <ul className="mt-2 text-ink font-bold">
-                <li>
-                  <a href="#work" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
-                    → Work
-                  </a>
-                </li>
-                <li>
-                  <a href="#approach" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
-                    → Approach
-                  </a>
-                </li>
-                <li>
-                  <a href="#contact" className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors">
-                    → Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <div className="text-ink-faint">Reach</div>
-              <ul className="mt-2 text-ink font-bold">
-                <li>
-                  <a
-                    href="mailto:hello@devcatapult.com"
-                    className="inline-flex items-center min-h-[44px] hover:text-acid-deep transition-colors lowercase tracking-normal"
-                  >
-                    hello@devcatapult.com
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="mt-12 pt-6 border-t-2 border-ink flex flex-col md:flex-row md:items-center md:justify-between gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-muted">
-          <span>© {new Date().getFullYear()} Catapult — Made independently.</span>
-          <span className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-acid animate-pulse" aria-hidden />
-            <span>devcatapult.com — Online</span>
+    <footer className="mt-32 md:mt-56 pb-12 md:pb-16">
+      <div className="max-w-[1320px] mx-auto px-8 md:px-14 lg:px-20">
+        <div className="border-t border-[var(--rule)] pt-8 flex flex-col md:flex-row md:items-baseline md:justify-between gap-3 text-[14px] text-ink-muted">
+          <span>
+            Catapult<span className="text-oxblood">.</span>{" "}
+            <span className="text-ink-faint">— Sacramento, California.</span>
+          </span>
+          <span className="text-ink-faint italic">
+            © {new Date().getFullYear()}
           </span>
         </div>
       </div>

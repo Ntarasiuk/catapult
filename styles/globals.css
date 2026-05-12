@@ -3,27 +3,32 @@
 @tailwind utilities;
 
 :root {
-  --bone: #eae6d8;
-  --bone-soft: #e0dbc9;
-  --bone-deep: #d4cdb6;
-  --ink: #080808;
-  --ink-soft: #1a1a1a;
-  --ink-muted: #444444;
-  --acid: #ccff02;
-  --acid-deep: #a6cc02;
+  --paper: #f2ecdd;
+  --paper-deep: #e8e1ce;
+  --ink: #0e1726;
+  --ink-soft: #2a3242;
+  --ink-muted: #4c566a;
+  --ink-faint: #6b7184;
+  --oxblood: #6f1d2c;
+  --oxblood-soft: #9b3e50;
+  --brass: #b08838;
+  --rule: rgba(14, 23, 38, 0.14);
+  --rule-strong: rgba(14, 23, 38, 0.28);
 }
 
 html {
   min-width: 360px;
   scroll-behavior: smooth;
-  background: var(--bone);
+  background: var(--paper);
 }
 
 html,
 body {
-  background-color: var(--bone);
+  background-color: var(--paper);
   color: var(--ink);
-  font-family: var(--font-mono, "Space Mono"), ui-monospace, monospace;
+  font-family: "Wix Madefor Text", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-feature-settings: "kern", "liga";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -32,102 +37,12 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--bone);
+  background: var(--paper);
 }
 
 ::selection {
-  background: var(--acid);
-  color: var(--ink);
-}
-
-/* Film grain */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 40;
-  opacity: 0.09;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.92' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
-/* Subtle scanlines (CRT vibe) */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 41;
-  opacity: 0.05;
-  background-image: linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.7) 50%,
-    transparent 50%
-  );
-  background-size: 100% 3px;
-  mix-blend-mode: multiply;
-}
-
-/* Hide native cursor on real pointer devices */
-@media (hover: hover) and (pointer: fine) {
-  html,
-  body {
-    cursor: none;
-  }
-  body * {
-    cursor: none !important;
-  }
-}
-
-/* Custom cursor */
-.cursor-dot,
-.cursor-ring {
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: difference;
-  will-change: transform;
-}
-.cursor-dot {
-  width: 6px;
-  height: 6px;
-  background: #ffffff;
-  border-radius: 50%;
-}
-.cursor-ring {
-  width: 38px;
-  height: 38px;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  transition: width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
-    height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
-    background 0.2s ease, border-color 0.2s ease, border-radius 0.25s ease;
-}
-.cursor-ring.is-hover {
-  width: 84px;
-  height: 84px;
-  background: rgba(255, 255, 255, 0.15);
-}
-.cursor-ring.is-pressed {
-  width: 28px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.4);
-}
-.cursor-ring.is-text {
-  width: 4px;
-  height: 32px;
-  border-radius: 0;
-  background: #ffffff;
-  border-width: 0;
-}
-@media (hover: none), (pointer: coarse) {
-  .cursor-dot,
-  .cursor-ring {
-    display: none !important;
-  }
+  background: var(--oxblood);
+  color: var(--paper);
 }
 
 /* Skip nav */
@@ -143,352 +58,190 @@ body::after {
   z-index: 100;
   padding: 0.625rem 0.875rem;
   background: var(--ink);
-  color: var(--bone);
-  font-family: "Space Mono", monospace;
+  color: var(--paper);
+  font-family: var(--font-mono), monospace;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  border: 2px solid var(--acid);
+  border: 1px solid var(--ink);
 }
 
-/* Brutalist rules */
-.rule {
-  display: block;
-  width: 100%;
-  height: 2px;
-  background: var(--ink);
-}
-.rule-hair {
-  display: block;
-  width: 100%;
-  height: 1px;
-  background: var(--ink);
-  opacity: 0.25;
+/* Small mono label */
+.label {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--ink-faint);
 }
 
-/* Marquee track (two copies; -50% = seamless loop) */
-.marquee-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-}
-
-/* ----- ASCII Joust (original game) ----- */
-.joust-game-wrap {
-  max-width: 100%;
-}
-.joust-game-screen {
-  /* Transparent overlay sized to the viewport. Cells are 1/192 vw × 1/64 vh. */
-  font-family: var(--font-mono, "Space Mono"), ui-monospace, monospace;
-  position: absolute;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  font-size: calc(100vh / 64);
-  line-height: calc(100vh / 64);
-  letter-spacing: calc((100vw / 192) - (100vh / 64) * 0.6);
-  background: transparent;
-  cursor: pointer;
-  white-space: pre;
+/* Quiet CTA — underlined sans with arrow */
+.cta {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
   color: var(--ink);
-  overflow: hidden;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 0.22rem;
+  transition: color 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
 }
-.joust-game-screen:focus {
-  outline: 2px solid var(--acid);
-  outline-offset: -2px;
-}
-
-/* Color palette for the ASCII game — chosen to read on the bone background
-   under mix-blend-multiply (lighter colors get darkened, so we lean warm). */
-.c-player  { color: #1F8A3D; }   /* deep emerald — visible on bone under multiply */
-.c-enemy   { color: #B11E1E; }   /* enemy crimson */
-.c-lava    { color: #C73215; }   /* deep lava */
-.c-lava-hi { color: #FF7A1A; font-weight: 700; }   /* glowing lava top edge */
-.c-rock    { color: #7A4A1A; }   /* warm rock-brown */
-.c-rock-dk { color: #4A2D10; }   /* shaded cliff face */
-.c-hud     { color: #080808; font-weight: 700; }
-.c-accent  { color: #A6CC02; font-weight: 700; }   /* brand acid-deep */
-.c-puff    { color: #999; }      /* death poof — desaturated */
-.c-knight  { color: #6F2E1B; }   /* rider — warm rust, same on player + enemy */
-.c-egg     { color: #E8B843; }   /* yellow egg */
-.c-bounder { color: #C97A2C; }   /* beige Bounder enemy bird */
-.c-hunter  { color: #B11E1E; }   /* red Hunter (= same as c-enemy default) */
-.c-shadow  { color: #5A5A5A; }   /* gray Shadow Lord */
-.c-ptero   { color: #8E1B4F; }   /* pterodactyl crimson */
-.c-ptero-hi{ color: #FF3DA6; font-weight: 700; }  /* mouth-open warning glow */
-.c-troll   { color: #4A1810; }   /* lava troll dark */
-.joust-game-screen:focus {
-  background: rgba(204, 255, 2, 0.05);
+.cta:hover {
+  color: var(--oxblood);
+  border-color: var(--oxblood);
 }
 
-/* ----- ASCII catapult (Peter Rijks) ----- */
-.ascii-catapult {
-  font-size: clamp(6px, 1.4vw, 13px);
-  letter-spacing: 0;
+/* Quiet link — animated ink underline */
+.ink-link {
+  position: relative;
   color: var(--ink);
+  text-decoration: none;
+  background-image: linear-gradient(var(--oxblood), var(--oxblood));
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  background-position: 0 100%;
+  transition: background-size 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    color 0.22s ease;
 }
-.ascii-catapult-shot {
-  position: absolute;
-  top: 0;
-  left: 28ch;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: 1;
-  color: var(--acid-deep);
-  font-weight: 700;
-  pointer-events: none;
-  opacity: 0;
-  will-change: transform, opacity;
-  animation: ascii-catapult-arc 1.6s cubic-bezier(0.3, 0.05, 0.6, 1) forwards;
-}
-@keyframes ascii-catapult-arc {
-  0%   { transform: translate(0, 0)        scale(0.9); opacity: 0; }
-  8%   { transform: translate(2ch, -1ch)   scale(1);   opacity: 1; }
-  30%  { transform: translate(12ch, -3.5ch); opacity: 1; }
-  55%  { transform: translate(24ch, -3ch);  opacity: 1; }
-  80%  { transform: translate(38ch, 1ch);   opacity: 1; }
-  100% { transform: translate(54ch, 10ch);  opacity: 0; }
+.ink-link:hover {
+  color: var(--oxblood);
+  background-size: 100% 1px;
 }
 
-/* ----- ASCII ostrich gallop strip (frame-by-frame; CSS handles horizontal travel) ----- */
-.ostrich-strip {
-  font-size: clamp(7px, 1.2vw, 12px);
-  line-height: 1;
-}
-.ostrich-track {
-  display: inline-block;
-  white-space: nowrap;
-  transform: translateX(110vw);
-  will-change: transform;
-}
-.ostrich-track.is-running {
-  animation: ostrich-gallop 12s linear 0s infinite;
-}
-@keyframes ostrich-gallop {
-  0%   { transform: translateX(110vw); }
-  100% { transform: translateX(-100%); }
-}
-.ostrich-frame {
-  display: inline-block;
-  font-family: var(--font-mono, "Space Mono"), ui-monospace, monospace;
-}
-@media (prefers-reduced-motion: reduce) {
-  .ascii-catapult-shot,
-  .ostrich-track.is-running {
-    animation: none !important;
-  }
-  .ascii-catapult-shot {
-    display: none;
-  }
-}
-
-/* Brutalist field input — sharp underline only */
+/* Form — quiet underline */
 .field {
   width: 100%;
   background: transparent;
   border: 0;
-  border-bottom: 2px solid var(--ink);
-  padding: 0.875rem 0;
-  font-family: "Space Mono", monospace;
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 0.75rem 0;
+  font-family: var(--font-sans), sans-serif;
   font-size: 1rem;
   color: var(--ink);
   outline: none;
   border-radius: 0;
   -webkit-appearance: none;
   appearance: none;
-  transition: background 0.18s ease;
+  transition: border-color 0.22s ease, background 0.22s ease;
 }
 .field::placeholder {
-  color: rgba(8, 8, 8, 0.42);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.85rem;
+  color: var(--ink-faint);
+  font-size: 0.95rem;
 }
 .field:focus {
-  background: rgba(204, 255, 2, 0.18);
+  border-color: var(--oxblood);
 }
 .field:disabled {
   opacity: 0.5;
 }
 textarea.field {
   resize: none;
-  line-height: 1.55;
+  line-height: 1.65;
 }
 
-/* Brutalist chip */
 .chip {
-  font-family: "Space Mono", monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  font-weight: 700;
-  padding: 0.875rem 0.75rem;
-  border: 2px solid var(--ink);
-  background: var(--bone);
-  color: var(--ink);
-  transition: background 0.12s linear, color 0.12s linear,
-    transform 0.12s ease;
+  padding: 0.65rem 0.5rem;
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+  color: var(--ink-soft);
+  transition: background 0.18s linear, color 0.18s linear,
+    border-color 0.18s linear;
 }
 .chip:hover:not(:disabled) {
-  background: var(--ink);
-  color: var(--bone);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 .chip[data-active="true"] {
-  background: var(--acid);
-  color: var(--ink);
-}
-.chip[data-active="true"]:hover {
-  background: var(--acid);
-  color: var(--ink);
-}
-
-/* Brutalist primary button (ink fill, hover flips to acid) */
-.btn-ink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.5rem;
   background: var(--ink);
-  color: var(--bone);
-  border: 2px solid var(--ink);
-  font-family: "Space Mono", monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  transition: background 0.12s linear, color 0.12s linear;
-}
-.btn-ink:hover {
-  background: var(--acid);
-  color: var(--ink);
-}
-
-/* Brutalist acid button (offset shadow stamp on hover) */
-.btn-acid {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.75rem;
-  background: var(--acid);
-  color: var(--ink);
-  border: 2px solid var(--ink);
-  font-family: "Space Mono", monospace;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  position: relative;
-  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.btn-acid:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: 6px 6px 0 var(--ink);
-}
-.btn-acid:active {
-  transform: translate(0, 0);
-  box-shadow: 0 0 0 var(--ink);
-}
-
-/* Brutalist underline link */
-.brutal-link {
-  position: relative;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: "Space Mono", monospace;
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: 2px;
-  transition: color 0.12s linear, border-color 0.12s linear;
-}
-.brutal-link:hover {
-  color: var(--acid-deep);
-  border-color: var(--acid-deep);
+  color: var(--paper);
+  border-color: var(--ink);
 }
 
 /* Reveal-on-scroll */
 .reveal-up {
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.85s cubic-bezier(0.2, 0.8, 0.2, 1),
-    transform 0.85s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: translateY(20px);
+  transition: opacity 0.95s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.95s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .reveal-up.is-visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Hover-flip card */
-.flip-card {
-  position: relative;
-  background: var(--bone);
-  color: var(--ink);
-  transition: background 0.18s linear, color 0.18s linear;
-  --mx: 50%;
-  --my: 50%;
+/* Cursor — small ink dot + ring */
+@media (hover: hover) and (pointer: fine) {
+  html,
+  body {
+    cursor: none;
+  }
+  body * {
+    cursor: none !important;
+  }
 }
-.flip-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
   pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(
-    260px circle at var(--mx) var(--my),
-    rgba(204, 255, 2, 0.22),
-    transparent 70%
-  );
-  transition: opacity 0.25s ease;
-  z-index: 0;
+  z-index: 9999;
+  mix-blend-mode: multiply;
+  will-change: transform;
 }
-.flip-card > * {
-  position: relative;
-  z-index: 1;
-}
-.flip-card:hover {
+.cursor-dot {
+  width: 5px;
+  height: 5px;
   background: var(--ink);
-  color: var(--bone);
+  border-radius: 50%;
 }
-.flip-card:hover::before {
-  opacity: 1;
+.cursor-ring {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  transition: width 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background 0.2s ease, border-color 0.2s ease;
 }
-.flip-card:hover .flip-accent {
-  color: var(--acid);
+.cursor-ring.is-hover {
+  width: 56px;
+  height: 56px;
+  background: rgba(111, 29, 44, 0.06);
+  border-color: var(--oxblood);
 }
-.flip-card:hover .flip-rule {
-  background: rgba(255, 255, 255, 0.18);
+.cursor-ring.is-pressed {
+  width: 22px;
+  height: 22px;
+  background: rgba(14, 23, 38, 0.15);
 }
-.flip-card:hover .flip-mark {
-  color: var(--acid);
+.cursor-ring.is-text {
+  width: 2px;
+  height: 28px;
+  border-radius: 0;
+  background: var(--ink);
+  border-width: 0;
+}
+@media (hover: none), (pointer: coarse) {
+  .cursor-dot,
+  .cursor-ring {
+    display: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-  .reveal-up {
-    opacity: 1;
-    transform: none;
-  }
-  .cursor-dot,
-  .cursor-ring {
-    display: none !important;
-  }
-  html,
-  body,
-  body * {
-    cursor: auto !important;
-  }
-}
-
-input[type="text"],
-input[type="email"],
-textarea {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
 }

@@ -5,75 +5,68 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bone: {
-          DEFAULT: "#EAE6D8",
-          soft: "#E0DBC9",
-          deep: "#D4CDB6",
+        /* Document palette — confidential PE memo aesthetic */
+        paper: {
+          DEFAULT: "#F2ECDD",
+          deep: "#E8E1CE",
+          shadow: "#D6CCB4",
         },
         ink: {
-          DEFAULT: "#080808",
-          soft: "#1A1A1A",
-          muted: "#444444",
-          /* Was #7A7368 — failed WCAG AA contrast on bone (3.62:1).
-             #5A5247 lands at ~6.2:1 which clears 4.5:1 for normal text. */
-          faint: "#5A5247",
+          DEFAULT: "#0E1726",
+          soft: "#2A3242",
+          muted: "#4C566A",
+          faint: "#6B7184",
         },
-        acid: {
-          DEFAULT: "#CCFF02",
-          deep: "#A6CC02",
+        oxblood: {
+          DEFAULT: "#6F1D2C",
+          soft: "#9B3E50",
+        },
+        brass: {
+          DEFAULT: "#B08838",
+          soft: "#D4B26E",
         },
       },
       fontFamily: {
-        display: [
-          "var(--font-display)",
-          '"Big Shoulders Display"',
-          "Impact",
-          "sans-serif",
+        sans: [
+          "var(--font-sans)",
+          '"Wix Madefor Text"',
+          ...fontFamily.sans,
         ],
         mono: [
           "var(--font-mono)",
-          '"Space Mono"',
+          '"JetBrains Mono"',
           "ui-monospace",
+          "SFMono-Regular",
           "monospace",
         ],
-        sans: ["var(--font-mono)", '"Space Mono"', ...fontFamily.sans],
       },
       letterSpacing: {
-        ultratight: "-0.06em",
-        brutal: "-0.04em",
+        memo: "0.22em",
+        chrome: "0.28em",
       },
       animation: {
-        rise: "rise 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) backwards",
+        rise: "rise 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) backwards",
         fade: "fade 1.4s ease-out backwards",
-        marquee: "marquee 38s linear infinite",
-        flicker: "flicker 6s linear infinite",
-        wobble: "wobble 0.6s ease-in-out infinite",
+        rule: "rule 1.6s cubic-bezier(0.6, 0.05, 0.2, 1) backwards",
+        stamp: "stamp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) backwards",
       },
       keyframes: {
         rise: {
-          "0%": { opacity: "0", transform: "translateY(34px)" },
+          "0%": { opacity: "0", transform: "translateY(24px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         fade: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
-        marquee: {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" },
+        rule: {
+          "0%": { transform: "scaleX(0)", transformOrigin: "left" },
+          "100%": { transform: "scaleX(1)", transformOrigin: "left" },
         },
-        flicker: {
-          "0%, 95%, 100%": { opacity: "1" },
-          "96%": { opacity: "0.4" },
-          "97%": { opacity: "1" },
-          "98%": { opacity: "0.5" },
-          "99%": { opacity: "0.95" },
-        },
-        wobble: {
-          "0%, 100%": { transform: "translate(0,0) rotate(0)" },
-          "25%": { transform: "translate(1px,-1px) rotate(0.4deg)" },
-          "50%": { transform: "translate(-1px,1px) rotate(-0.4deg)" },
-          "75%": { transform: "translate(1px,1px) rotate(0.2deg)" },
+        stamp: {
+          "0%": { opacity: "0", transform: "scale(1.4) rotate(-8deg)" },
+          "60%": { opacity: "1", transform: "scale(0.96) rotate(-3deg)" },
+          "100%": { opacity: "1", transform: "scale(1) rotate(-2deg)" },
         },
       },
     },
