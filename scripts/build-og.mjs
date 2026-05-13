@@ -11,59 +11,57 @@ const fontDir = resolve(__dirname, "fonts");
 const outDir = resolve(root, "public/static");
 if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
 
-const bigShouldersBlack = readFileSync(
-  resolve(fontDir, "BigShouldersDisplay-Black.woff")
+const wixRegular = readFileSync(
+  resolve(fontDir, "WixMadeforText-Regular.ttf")
 );
-const spaceMonoBold = readFileSync(resolve(fontDir, "SpaceMono-Bold.woff"));
-const spaceMonoRegular = readFileSync(
-  resolve(fontDir, "SpaceMono-Regular.woff")
+const wixMediumItalic = readFileSync(
+  resolve(fontDir, "WixMadeforText-MediumItalic.ttf")
 );
+const jetMono = readFileSync(resolve(fontDir, "JetBrainsMono-Regular.ttf"));
 
-const BONE = "#EAE6D8";
-const INK = "#080808";
-const ACID = "#CCFF02";
-const ACID_DEEP = "#A6CC02";
+const PAPER = "#F2ECDD";
+const INK = "#0E1726";
+const INK_SOFT = "#2A3242";
+const INK_FAINT = "#6B7184";
+const OXBLOOD = "#6F1D2C";
+const RULE = "rgba(14, 23, 38, 0.18)";
 
 const markup = html(`
-<div style="width:1200px;height:630px;background:${BONE};color:${INK};display:flex;flex-direction:column;padding:48px 64px;font-family:'Space Mono';position:relative;">
+<div style="width:1200px;height:630px;background:${PAPER};color:${INK};display:flex;flex-direction:column;padding:60px 76px;font-family:'Wix Madefor Text';position:relative;">
 
-  <!-- TOP ROW -->
-  <div style="display:flex;justify-content:space-between;align-items:center;font-size:18px;letter-spacing:4px;text-transform:uppercase;font-weight:700;font-family:'Space Mono';">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <div style="width:14px;height:14px;background:${ACID};display:flex;"></div>
-      <span>EST. 2026 / INDEPENDENT STUDIO</span>
+  <!-- TOP ROW: eyebrow + wordmark -->
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;align-items:center;gap:14px;font-family:'JetBrains Mono';font-size:14px;letter-spacing:4px;text-transform:uppercase;color:${INK_FAINT};">
+      <div style="width:8px;height:8px;background:${OXBLOOD};border-radius:50%;display:flex;"></div>
+      <span style="display:flex;">For operating partners</span>
     </div>
-    <span style="font-family:'Big Shoulders Display';font-weight:900;font-size:42px;letter-spacing:-2px;text-transform:uppercase;">
-      CATAPULT<span style="color:${ACID_DEEP};">*</span>
-    </span>
+    <div style="font-family:'Wix Madefor Text';font-weight:400;font-size:30px;letter-spacing:-0.5px;color:${INK};display:flex;">
+      Catapult<span style="color:${OXBLOOD};display:flex;">.</span>
+    </div>
+  </div>
+
+  <!-- HEADLINE -->
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;margin-top:24px;font-family:'Wix Madefor Text';font-weight:400;font-size:104px;letter-spacing:-3.5px;line-height:1.0;color:${INK};">
+    <div style="display:flex;">Don’t cut what</div>
+    <div style="display:flex;align-items:baseline;gap:24px;">
+      <span style="display:flex;">you</span>
+      <span style="display:flex;font-style:italic;font-weight:500;color:${OXBLOOD};">can’t see.</span>
+    </div>
   </div>
 
   <!-- HAIRLINE -->
-  <div style="height:2px;background:${INK};margin-top:28px;display:flex;"></div>
+  <div style="height:1px;background:${RULE};display:flex;margin-bottom:20px;"></div>
 
-  <!-- HEADLINE -->
-  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;font-family:'Big Shoulders Display';font-weight:900;font-size:138px;letter-spacing:-7px;line-height:1.0;text-transform:uppercase;color:${INK};">
-    <div style="display:flex;">SITES THAT</div>
-    <div style="display:flex;align-items:center;gap:16px;">
-      <span style="background:${INK};color:${ACID};padding:0 20px;display:flex;line-height:1;">RANK.</span>
-      <span style="display:flex;">AI</span>
-    </div>
-    <div style="display:flex;">THAT SHIPS.</div>
-  </div>
-
-  <!-- FOOTER -->
-  <div style="display:flex;justify-content:space-between;align-items:center;font-size:18px;letter-spacing:4px;text-transform:uppercase;font-weight:700;padding-top:22px;border-top:2px solid ${INK};font-family:'Space Mono';">
-    <span style="display:flex;align-items:center;gap:14px;">
-      <span>devcatapult.com</span>
+  <!-- FOOTER: sub + url -->
+  <div style="display:flex;justify-content:space-between;align-items:baseline;">
+    <span style="font-family:'Wix Madefor Text';font-size:20px;color:${INK_SOFT};display:flex;max-width:780px;line-height:1.4;">
+      A hold-period intelligence layer for PE portfolio companies.
     </span>
-    <span style="display:flex;align-items:center;gap:18px;">
-      <span style="display:flex;">WEBSITES</span>
-      <span style="color:${ACID_DEEP};display:flex;">/</span>
-      <span style="display:flex;">SEO</span>
-      <span style="color:${ACID_DEEP};display:flex;">/</span>
-      <span style="display:flex;">AI</span>
+    <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:3px;text-transform:uppercase;color:${INK_FAINT};display:flex;">
+      devcatapult.com
     </span>
   </div>
+
 </div>
 `);
 
@@ -72,20 +70,20 @@ const svg = await satori(markup, {
   height: 630,
   fonts: [
     {
-      name: "Big Shoulders Display",
-      data: bigShouldersBlack,
-      weight: 900,
+      name: "Wix Madefor Text",
+      data: wixRegular,
+      weight: 400,
       style: "normal",
     },
     {
-      name: "Space Mono",
-      data: spaceMonoBold,
-      weight: 700,
-      style: "normal",
+      name: "Wix Madefor Text",
+      data: wixMediumItalic,
+      weight: 500,
+      style: "italic",
     },
     {
-      name: "Space Mono",
-      data: spaceMonoRegular,
+      name: "JetBrains Mono",
+      data: jetMono,
       weight: 400,
       style: "normal",
     },
@@ -94,7 +92,6 @@ const svg = await satori(markup, {
 
 const resvg = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } });
 const png = resvg.render().asPng();
-writeFileSync(resolve(outDir, "og.png"), png);
-console.log(
-  `Wrote ${resolve(outDir, "og.png")} — ${(png.length / 1024).toFixed(1)} KB`
-);
+const outPath = resolve(outDir, "og.png");
+writeFileSync(outPath, png);
+console.log(`✓ ${outPath} (${(png.length / 1024).toFixed(1)} KB)`);

@@ -32,12 +32,12 @@ export default function Container(props) {
         <meta property="og:image" content={meta.image} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="Catapult." />
+        <meta property="og:image:alt" content="Catapult — don't cut what you can't see." />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={meta.title} />
         <meta name="twitter:description" content={meta.description} />
         <meta name="twitter:image" content={meta.image} />
-        <meta name="twitter:image:alt" content="Catapult." />
+        <meta name="twitter:image:alt" content="Catapult — don't cut what you can't see." />
       </Head>
       <a href="#main" className="skip-nav">
         Skip to content
